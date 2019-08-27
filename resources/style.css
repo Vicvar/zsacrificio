@@ -1,0 +1,191 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+/*MAIN*/
+#wrapper{
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(400px,40%) auto;
+	height: 100vh;
+}
+
+#global-selector{
+	overflow: hidden;
+	position: relative;
+	height: 20vh;
+	min-height: 150px;
+	display:grid;
+	background-color: beige;
+	padding: 10px;
+}
+
+#side-bar{
+	background-color: beige;
+	overflow-y: scroll;
+	box-shadow: 10px 0px 20px grey;
+	z-index: 801;
+	scrollbar-width: thin;
+	scrollbar-color: auto;
+}
+
+#search-tabs{
+	background-color: darkgrey;
+	padding: 7px;
+}
+
+#search{
+	background-color: lightgrey;
+	min-height: 50vh;
+	padding:10px;
+	overflow: hidden;
+}
+
+#results{
+	background-color: beige;
+	padding:10px;
+}
+
+#selector {
+	position: relative;
+	min-height: 73px;
+	height: 12vh;
+	background-color: white;
+	z-index: 802;
+}
+
+/*MAP*/
+#mapid {
+	height: 88vh;
+}
+
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+/*TIME SELECTOR*/
+#date-range{
+	position: relative;
+	padding-top: 8px;
+}
+
+#nouislider{
+	width: 55vw;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+#input-f{
+	padding: 5px;
+}
+
+#sel-fuente{
+	position: relative;
+	float: left;
+	padding: 10px;
+}
+
+#fechas{
+	width: 50vw;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+#f-inicio{
+	float:left;
+}
+#f-fin{
+	float: right;
+}
+
+/*TABS*/
+.tabs{
+	overflow: hidden;
+	border: 1px solid lightgrey;
+	background-color: #f1f1f1;
+}
+
+.tabs button{
+	background-color: inherit;
+	float: left;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	padding: 14px 16px;
+	transition: 0.3s;
+}
+
+.tabs button:hover{
+	background-color: #ddd;
+}
+
+.tab-button.active{
+	background-color: lightgrey;
+}
+
+.search-form{
+	display: none;
+	padding: 6px 12px;
+	border: 1px solid lightgrey;
+	border-top: none;
+}
+
+.search-form.active{
+	display: block;
+	padding: 6px 12px;
+	border: 1px solid lightgrey;
+	border-top: none;
+}
+
+/*FORMS*/
+.form-field{
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.form-field2{
+	display: block;
+	width: 100%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.text-input{
+	float: right;
+	padding-right: 10px;
+}
+
+.s-checkboxes{
+	float: right;
+	margin-right: 25%;
+}
+
+.s-checkboxes label{
+	padding-right: 5px;
+}
+
+.checkboxes{
+	width: 75%;
+	columns: 2;
+	float: right;
+}
+
+.checkboxes li{
+	display: block;
+	width:100%;
+	float: right;
+	padding: 3px;
+}
