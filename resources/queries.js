@@ -155,10 +155,12 @@ function requestUrlString(){
 	//source specific attribute values (for all sources, in an object)
 	var ss_attr_vals = {}
 	for(f of fuentes){
+
+		//checks if the source checkbox is selected
 		var selected = document.getElementById(f).getElementsByClassName('source-cb')[0].checked;
-		//empty object for consistency
-		ss_attr_vals[f]={};
+		//empty object for consistency(?)
 		if(selected){
+			ss_attr_vals[f]={};
 			for(input of document.getElementById(f).getElementsByTagName('input')){
 				if(input.type == 'checkbox' && input.name != ""){
 					if(input.checked){
@@ -167,12 +169,12 @@ function requestUrlString(){
 						ss_attr_vals[f][input.name].push(input.value);
 					}
 				}
-				else if(input.type != 'checkbox'){
+				else if(input.type != 'checkbox' && input.name != ''){
 					ss_attr_vals[f][input.name] = input.value;
 				}
 			}
-			for(ms of document.getElementById(f).getElementsByTagName('multiselect')){
-				console.log(ms.value);
+			for(ms of document.getElementById(f).getElementsByClassName('multi-select')){
+				ss_attr_vals[f][ms.id]=ms.__vue__.getValues();
 			}
 		}
 	}
@@ -196,11 +198,10 @@ function aTest(){
 
 	phttp.onreadystatechange = function(){
 		if (this.readyState == 4 && this.status == 200) {
-			console.log(this.responseText);
+			//console.log(this.responseText);
 			var q_results = JSON.parse(this.responseText);
 			//console.log(q_results);
-			document.getElementById('results').innerHTML+='<br>Número de resultados: '+q_results.length;
-			//displayResults(source,q_results);
+			displayResults(q_results);
 			mymap.addLayer(markers);
 			//console.log('Empty responseText');
 		}

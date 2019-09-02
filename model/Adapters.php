@@ -17,7 +17,7 @@
 		}
 
 		public function query($comunas, $timeSpan, $extraKWValues){
-			$cFilter = $this->multiExactValuesFilter("cp", "id_comuna", $comunas);
+			$cFilter = $this->multExactValuesFilter("cp", "id_comuna", $comunas);
 
 			$sDate = strtotime($timeSpan[0]);
 			$eDate = strtotime($timeSpan[1]);
@@ -25,7 +25,7 @@
 			$sDate = date('Y-m-d H:i:s', $sDate);
 			$eDate = date('Y-m-d H:i:s', $eDate);
 
-			$extraValues = $this->parseExtraValues($extraKWValues);
+			$extraValues = $this->processExtraValues($extraKWValues);
 
 			//echo "Parsed source specific values:<br>";
 			//print_r($extraValues);
@@ -45,7 +45,7 @@
 			return pg_fetch_all($result);
 		}
 
-		private function parseExtraValues($extraKWValues){
+		private function processExtraValues($extraKWValues){
 			$str = "and p.nombre ILIKE '%".$extraKWValues['nombre']."%'
 			and p.titular ILIKE '%".$extraKWValues['titular']."%'";
 
@@ -53,16 +53,16 @@
 				$str .= "and p.inversion > ".$extraKWValues['inversion'];
 			}
 
-			$tstr = $this->multiExactValuesFilter("p", "tipo", $extraKWValues['tipo']);
-			$estr = $this->multiExactValuesFilter("p", "estado", $extraKWValues['estado']);
-			$spstr = $this->multiExactValuesFilter("p", "sector_productivo", $extraKWValues['sector productivo']);
+			$tstr = $this->multExactValuesFilter("p", "tipo", $extraKWValues['tipo']);
+			$estr = $this->multExactValuesFilter("p", "estado", $extraKWValues['estado']);
+			$spstr = $this->multExactValuesFilter("p", "sector_productivo", $extraKWValues['sector-productivo']);
 
 			$str .= $tstr.$estr.$spstr;	
 
 			return $str;
 		}
 
-		private function multiExactValuesFilter($tAlias, $attrName, $valueArr){
+		private function multExactValuesFilter($tAlias, $attrName, $valueArr){
 			$val_str = "";
 			if(count($valueArr)>0){
 				$val_str = " and ".$tAlias.".".$attrName." in ('".array_shift($valueArr)."'";
@@ -87,18 +87,105 @@
 		}
 
 		function query($comunas, $timeSpan, $extraKWValues){
-			$cFilter = "(cp.id_comuna=".$comunas[0];
+			$cFilter = $this->getComunasFilter("c", $comunas);
 
-			for ($i=1; $i < count($comunas); $i++) { 
-				$cFilter .= " or cp.id_comuna=".$comunas[$i];
-			}
+			$comT = "";
+			if(count($comunas)>0)
+				$comT = ", public.comunas as c";
 
-			$cFilter .= ")";
+
+			$sDate = strtotime($timeSpan[0]);
+			$eDate = strtotime($timeSpan[1]);
+
+			$sDate = date('Y-m-d H:i:s', $sDate);
+			$eDate = date('Y-m-d H:i:s', $eDate);
+
+
+			$extraValues = $this->processExtraValues($extraKWValues);
+			//echo $extraValues;
 
 			$pgqs = "SELECT a.*
-			FROM coes.accion as a, public.comunas as c
-			WHERE ".$cFilter."
-			";
+			FROM coes.accion as a".$comT."
+			WHERE a.fecha_inicio BETWEEN '".$sDate."' and '".$eDate."'
+			".$cFilter."
+			".$extraValues.";";
+
+			//echo "<br><br>".$pgqs;
+
+			$result = pg_query($this->psql_con, $pgqs);
+
+			return pg_fetch_all($result);
+		}
+
+		private function getComunasFilter($cAlias,$comunas){
+			$str = "";
+
+			if(count($comunas)>0){
+				$str = "and ".$cAlias.".id IN (".array_shift($comunas);
+				foreach ($comunas as $value) {
+					$str .= ", ".$value;
+				}
+				$str .= ") and a.comuna=".$cAlias.".cut::integer";
+			}
+			return $str;
+		}
+
+		private function processExtraValues($extraValues){
+			$str = "";
+
+			$presencia_carabineros = $extraValues['carabineros'];
+			$fuerzas_disuasivas = $extraValues['fuerzas-disuasivas'];
+			$perjuicios = $extraValues['perjuicios-participantes'];
+			
+			$campos_conflictividad = $extraValues['campos-conflictividad'];
+			$elementos_demanda = array_merge($extraValues['elementos-demanda'],$extraValues['otros-elementos-demanda']);
+			$grupos_sociales = $extraValues['grupos-sociales'];
+			$actores = $extraValues['actores'];
+
+			if(count($presencia_carabineros)==1){
+				$str .=" and a.presencia_carabineros='".$presencia_carabineros[0]."'";
+			}
+
+			if(count($fuerzas_disuasivas)==1 || count($fuerzas_disuasivas)==2){
+				foreach ($fuerzas_disuasivas as $fd)
+					$str .= " and a.".$fd."='1'";
+			}
+
+			if(count($perjuicios)==1 || count($perjuicios)==2){
+				foreach ($perjuicios as $p)
+					$str .= " and a.".$p."='1'";
+			}
+
+			$str .= $this->filterTableAttributes("campos_conflictividad_accion","cca","id_campo_conflictividad",$campos_conflictividad);
+			$str .= $this->filterTableAttributes("elementos_demanda_accion","eda","id_elemento_demanda",$elementos_demanda);
+			$str .= $this->filterTableAttributes("grupos_accion","gsa","id_grupo_social",$grupos_sociales);
+
+			//actor can be in two tables
+			if(count($actores)>0){
+				$str .= " and a.id_accion in";
+				$str .= "(SELECT actacc.id_accion FROM (SELECT * FROM coes.actores_demandantes UNION SELECT * FROM coes.actores_demandados) as actacc ";
+				$str .= "WHERE actacc.id_actor IN (".array_shift($actores);
+				foreach ($actores as $actor) {
+					$str .= ", ".$actor;
+				}
+				$str .= ") GROUP BY actacc.id_accion)";
+			}
+
+			return $str;
+		}
+
+		private function filterTableAttributes($table, $tAlias, $attrName, $valueArr){
+			$r_str = "";
+			if(count($valueArr)>0){
+				$r_str .= " and a.id_accion in";
+				$r_str .= "(SELECT ".$tAlias.".id_accion FROM coes.".$table." as ".$tAlias." ";
+				$r_str .= "WHERE ".$tAlias.".".$attrName." IN (".array_shift($valueArr);
+				foreach ($valueArr as $value) {
+					$r_str .= ", ".$value;
+				}
+				$r_str .= ") GROUP BY ".$tAlias.".id_accion)";
+			}
+			return $r_str;
 		}
 	}
 ?>

@@ -31,13 +31,14 @@
 }
 
 #search-tabs{
+	position: relative;
 	background-color: darkgrey;
 	padding: 7px;
+	overflow: hidden;
 }
 
 #search{
 	background-color: lightgrey;
-	min-height: 50vh;
 	padding:10px;
 	overflow: hidden;
 }
@@ -188,4 +189,15 @@
 	width:100%;
 	float: right;
 	padding: 3px;
+}
+
+/*Multiforms :D*/
+.multi-select {
+	position: relative;
+	padding-bottom: 10px;
+	padding-bottom: 10px;
+}
+
+.clearbutton{
+	padding: 5px;
 }

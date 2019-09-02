@@ -40,17 +40,18 @@
 			</div>
 			<div id="search-tabs">
 				<div class="tabs">
-					<button class="tab-button active" onclick="showForm(event,'seia')">SEIA</button>
-					<button class="tab-button" onclick="showForm(event,'coes')">COES</button>
+					<button class="tab-button" onclick="showForm(event,'seia')">SEIA</button>
+					<button class="tab-button active" onclick="showForm(event,'coes')">COES</button>
 					<button class="tab-button" onclick="showForm(event,'lobby')">Lobby</button>
 				</div>
 				<div id="search">
 					<!--Formularios-->
-					<div id="seia" class="search-form active">
+					<div id="seia" class="search-form">
 						<h4>Sistema de Evaluación de Impacto Ambiental</h4>
 						<br>
 						
-						<input class="source-cb" type="checkbox" value="seia"> Usar fuente <br><br>
+						<label><input class="source-cb" type="checkbox" value="seia"> Usar fuente </label>
+						<br><br>
 						<hr>
 						<div class="form-field">
 							Nombre del Proyecto:
@@ -67,68 +68,100 @@
 							<input class="text-input" type="number" name="inversion" value="0">
 						</div>
 						<hr>
-						<div class="form-field">
-							Tipo de presentación:
-							<div class="s-checkboxes">
-								<label><input type="checkbox" id="DIA" name="tipo" checked="" value="DIA">DIA</label>
-								<label><input type="checkbox" id="EIA" name="tipo" checked="" value="EIA">EIA</label>
+						<div id="tipo" class="multi-select">
+							<label class="ms-label">Tipo de presentación:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="tipo.resetValues()">Borrar Filtro</button>
 							</div>
 						</div>
 						<hr>
-						<div class="form-field">
-							Estado:
-							<ul class="checkboxes">
-								<li><label><input type="checkbox" name="estado" checked="" value="En Calificación">En calificación</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="Aprobado">Aprobado</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="Rechazado">Rechazado</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="No Admitido a Tramitación">No admitido a tramitación</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="Desistido">Desistido</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="Revocado">Revocado</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="No calificado">No calificado</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="Abandonado">Abandonado</label></li>
-								<li><label><input type="checkbox" name="estado" checked="" value="Caducado">Caducado</label></li>
-							</ul>
+						<div id="estado" class="multi-select">
+							<label class="ms-label">Estado:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="estado.resetValues()">Borrar Filtro</button>
+							</div>
 						</div>
 						<hr>
-						<div class="form-field">
-							Sector<br>productivo:
-							<ul class="checkboxes">
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Agropecuario">Agropecuario</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Energía">Energía</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Equipamiento">Equipamiento</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Forestal">Forestal</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Infraestructura de Transporte">Infraestructura de transporte</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Infraestructura Hidráulica">Infraestructura hidráulica</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Infraestructura Portuaria">Infraestructura portuaria</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Inmobiliarios">Inmobiliarios</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Instalaciones fabriles varias">Instalaciones fabriles varias</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Minería">Minería</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Pesca y Acuicultura">Pesca y acuicultura</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Planificación Territorial e Inmobiliarios en Zonas">Planificación territorial e inmobiliarios en zonas</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Saneamiento Ambiental">Saneamiento ambiental</label></li>
-								<li><label><input type="checkbox" name="sector productivo" checked="" value="Otros">Otros</label></li>
-							</ul>
+						<div id="sector-productivo" class="multi-select">
+							<label class="ms-label">Sector productivo:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="sector_productivo.resetValues()">Borrar Filtro</button>
+							</div>
 						</div>
 					</div>
-					<div id="coes" class="search-form">
+					<div id="coes" class="search-form active">
 						<h4>Observatorio de conflictos sociales</h4>
 						<br>
 						<label><input class="source-cb" type="checkbox" value="coes"> Usar fuente </label>
 						<br><br>
-						<div id="elementos-demanda">
-							<label class="typo__label">Elementos de demanda:</label>
-						  <multiselect v-model="value" :options="options" :multiple="true" group-values="vals" group-label="tipo" :group-select="true" placeholder="Type to search" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
-						  <pre class="language-json"><code>{{ value  }}</code></pre>
+
+						<div id="campos-conflictividad" class="multi-select">
+							<label class="ms-label">Campos de conflictividad:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="campos_conflictividad.resetValues()">Borrar Filtro</button>
+							</div>
 						</div>
-						<div class="form-field">
+
+						<div id="elementos-demanda" class="multi-select">
+							Elementos de demanda:
+							<multiselect class="multisel" v-model="value" :options="options" :multiple="true" group-values="elements" group-label="type" :group-select="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="elementos_demanda.resetValues()">Borrar Filtro</button>
+							</div>
+						</div>
+
+						<div id="otros-elementos-demanda" class="multi-select">
 							Otros elementos de demanda:
-							<input type="text" name="">
+							<multiselect v-model="value" :options="options" :multiple="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="otros_elementos_demanda.resetValues()">Borrar Filtro</button>
+							</div>
 						</div>
-						<div id="grupos-sociales">
+
+						<div id="grupos-sociales" class="multi-select">
 							<label class="typo__label">Grupos sociales:</label>
-						  <multiselect v-model="value" :options="options" :multiple="true" group-values="vals" group-label="tipo" :group-select="true" placeholder="Type to search" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
-						  <pre class="language-json"><code>{{ value  }}</code></pre>
+							<multiselect v-model="value" :options="options" :multiple="true" group-values="elements" group-label="type" :group-select="true" placeholder="Buscar en el selector" closeOnSelect="false" track-by="value" label="label"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="grupos_sociales.resetValues()">Borrar Filtro</button>
+							</div>
 						</div>
+
+						<div id="actores" class="multi-select">
+							Actores involucrados:
+							<multiselect v-model="value" :options="options" :multiple="true" track-by="value" label="label" placeholder="Buscar en el selector" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="actores.resetValues()">Borrar Filtro</button>
+							</div>
+						</div>
+
+						<div id="carabineros" class="multi-select">
+							<label class="typo__label">Presencia de carabineros:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" track-by="value" label="label" placeholder="Buscar en el selector" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="carabineros.resetValues()">Borrar Filtro</button>
+							</div>
+						</div>
+
+						<div id="fuerzas-disuasivas" class="multi-select">
+							<label class="typo__label">Fuerzas disuasivas:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" track-by="value" label="label" placeholder="Buscar en el selector" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="fuerzas_disuasivas.resetValues()">Borrar Filtro</button>
+							</div>
+						</div>
+
+						<div id="perjuicios-participantes" class="multi-select">
+							<label class="typo__label">Perjuicios a participantes:</label>
+							<multiselect v-model="value" :options="options" :multiple="true" track-by="value" label="label" placeholder="Buscar en el selector" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+							<div class="clearbutton">
+								<button onclick="perjuicios_participantes.resetValues()">Borrar Filtro</button>
+							</div>
+						</div>
+
 
 
 					</div>
@@ -173,7 +206,7 @@
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 				}).addTo(mymap);
 
-			//Getting territorial divisions from inital DB load
+			//Getting territorial divisions from inital DB load used in populate_map.js
 
 			var region_vect = <?php echo json_encode($regiones)?>;
 			var provincia_vect = <?php echo json_encode($provincias)?>;
@@ -182,12 +215,34 @@
 			var n_regiones = <?php echo count($regiones)?>;
 			var fe_regiones = Array(n_regiones); //stores region objects
 
+			//table data for SEIA
+			var tipo_pres = <?php echo json_encode($tipo_presentacion) ?>;
+			var estado = <?php echo json_encode($estado) ?>;
+			var sector_productivo = <?php echo json_encode($sector_productivo) ?>;
+			console.log(estado);
+
+			//Getting table data for selectors used in multiselectors.js
+			var elementos_demanda = <?php  echo json_encode($elemento_demanda)?>;
+			var tipos_elemento_demanda = <?php echo json_encode($tipo_elemento_demanda) ?>;
+
+			var grupos_sociales = <?php echo json_encode($grupo_social)?>;
+			var tipos_grupo_social = <?php echo json_encode($tipo_grupo_social) ?>;
+
+			var actores = <?php echo json_encode($actor) ?>;
+
+			var campos_conflictividad = <?php echo json_encode($campo_conflictividad) ?>;
+
+			var tacticas_protesta = <?php echo json_encode($tactica_protesta) ?>;
+
+			var medios = <?php echo json_encode($medio) ?>;
+
+
 		</script>
 		<script src="resources/populate_map.js"></script>
-		<script src="resources/queries.js"></script>
-		<script src="resources/results_display.js"></script>
 		<script src="resources/tabs.js"></script>
 		<script src="resources/multiselectors.js"></script>
+		<script src="resources/queries.js"></script>
+		<script src="resources/results_display.js"></script>
 
 	</div>
 </body>
