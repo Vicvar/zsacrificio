@@ -135,6 +135,9 @@ var SelectableRegion = SelectablePolygon.extend({
 				mymap.removeLayer(this.provincias[i]);
 			}
 		}
+	},
+	choropletize(val_comunas){
+		return;
 	}
 });
 

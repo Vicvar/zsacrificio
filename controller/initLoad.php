@@ -85,7 +85,7 @@
 		}
 	}
 
-	echo "method 2 time:".(microtime(true)-$t2)."s<br>";
+	//echo "method 2 time:".(microtime(true)-$t2)."s<br>";
 	//print_r($r);
 	//print_r($p);
 	//print_r($c);

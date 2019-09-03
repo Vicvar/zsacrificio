@@ -55,11 +55,11 @@ var region_to_provincias = new Map();
 for(r in provincia_vect){
 	//console.log(r,provincia_vect[r]);
 	var r_prov= [];
-	for(p in provincia_vect[r])
+	for(p of provincia_vect[r])
 		r_prov.push(p.nombre);
 	region_to_provincias.set(r,r_prov);
 }
-console.log(region_to_provincias);
+//console.log(region_to_provincias);
 
 //provincia -> comunas
 var provincia_to_comunas = new Map();
@@ -74,7 +74,7 @@ for(p in comuna_vect){
 	}
 	provincia_to_comunas.set(p,p_com);
 }
-console.log(provincia_to_comunas);
+//console.log(provincia_to_comunas);
 
 
 //Get all selected areas

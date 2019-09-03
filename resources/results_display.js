@@ -1,3 +1,14 @@
+var regiones = {};
+for(r of region_vect){
+	regiones[r.id] = {
+		provincias : {}
+	};
+}
+
+for(p in provincia_vect){
+	
+}
+
 function displayResults(data, markers){
 	for(source in data){
 		var val_comunas = {};
@@ -27,6 +38,7 @@ function displayResults(data, markers){
 		for(region of fe_regiones){
 			region.choropletize(val_comunas);
 		}
+
 		mymap.addLayer(markers);
 	}
 };
