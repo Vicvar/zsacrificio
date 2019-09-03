@@ -17,7 +17,7 @@
 		}
 
 		public function query($comunas, $timeSpan, $extraKWValues){
-			$cFilter = $this->multExactValuesFilter("cp", "id_comuna", $comunas);
+			$cFilter = $this->multExactValuesFilter("cp1", "id_comuna", $comunas);
 
 			$sDate = strtotime($timeSpan[0]);
 			$eDate = strtotime($timeSpan[1]);
@@ -31,18 +31,23 @@
 			//print_r($extraValues);
 			//echo "<br>";
 
-			$pgqs = "SELECT * 
-			FROM seia.proyecto as p, seia.comunas_de_proyecto as cp 
-			WHERE p.fecha_presentado BETWEEN '".$sDate."' and '".$eDate."'
-			".$cFilter."
-			".$extraValues."
-			and p.id_proyecto = cp.id_proyecto;";
+			$pgqs = "SELECT json_agg(res)
+			FROM 
+				(SELECT *, json_build_object('start', p.fecha_presentado, 'end', p.fecha_calificado) as time_span
+				FROM seia.proyecto as p 
+				INNER JOIN 
+					(SELECT cp1.id_proyecto, json_agg(cp1.id_comuna) as comunas
+					FROM seia.comunas_de_proyecto as cp1
+					WHERE ".$cFilter." GROUP BY cp1.id_proyecto) as cp
+				ON p.id_proyecto = cp.id_proyecto 
+				WHERE p.fecha_presentado BETWEEN '".$sDate."' and '".$eDate."'
+				".$extraValues.") as res;";
 
-			echo "<br>Query string: <br>".$pgqs;
+			//echo "<br>Query string: <br>".$pgqs;
 
 			$result = pg_query($this->psql_con, $pgqs);
 			
-			return pg_fetch_all($result);
+			return pg_fetch_all($result)[0]['json_agg'];
 		}
 
 		private function processExtraValues($extraKWValues){
@@ -53,11 +58,17 @@
 				$str .= "and p.inversion > ".$extraKWValues['inversion'];
 			}
 
-			$tstr = $this->multExactValuesFilter("p", "tipo", $extraKWValues['tipo']);
-			$estr = $this->multExactValuesFilter("p", "estado", $extraKWValues['estado']);
-			$spstr = $this->multExactValuesFilter("p", "sector_productivo", $extraKWValues['sector-productivo']);
+			$tipos = $extraKWValues['tipo'];
+			if(count($tipos)>0)
+				$str .= " and".$this->multExactValuesFilter("p", "tipo", $tipos);
 
-			$str .= $tstr.$estr.$spstr;	
+			$estados = $extraKWValues['estado'];
+			if(count($estados)>0)
+				$str .= " and".$this->multExactValuesFilter("p", "estado", $estados);
+			
+			$sect_prod = $extraKWValues['sector-productivo'];
+			if(count($sect_prod))
+				$str .= " and".$this->multExactValuesFilter("p", "sector_productivo", $sect_prod);
 
 			return $str;
 		}
@@ -65,7 +76,7 @@
 		private function multExactValuesFilter($tAlias, $attrName, $valueArr){
 			$val_str = "";
 			if(count($valueArr)>0){
-				$val_str = " and ".$tAlias.".".$attrName." in ('".array_shift($valueArr)."'";
+				$val_str = " ".$tAlias.".".$attrName." in ('".array_shift($valueArr)."'";
 				foreach ($valueArr as $value) {
 					$val_str .= ", '".$value."'";
 				}

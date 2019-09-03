@@ -1,13 +1,28 @@
 var SelectablePolygon = L.GeoJSON.extend({
 	selected: false,
+	selectedStyle:{
+		fillColor: '#a6cee3',
+		fillOpacity: 0.8,
+		color: '#1f78b4',
+		weight: 3,
+		dashArray: ''
+	},
+	unselectedStyle:{
+		fillColor: '#a6cee3',
+		fillOpacity: 0.2,
+		color: '#1f78b4',
+		weight: 2,
+		dashArray: ''
+	},
+	highlightStyle:{
+		fillColor: '#a6cee3',
+		fillOpacity: 0.8,
+		color: '#1f78b4',
+		weight: 4,
+		dashArray: ''
+	},
 	init: function (){
-		this.setStyle({
-			fillColor: '#bdd7e7',
-			fillOpacity: 0.2,
-			color: '#2171b5',
-			weight: 2,
-			dashArray: '',
-		});
+		this.setStyle(this.unselectedStyle);
 		this.on({
 			click: this.toggleSelect,
 			mouseover: this._highlight,
@@ -16,34 +31,16 @@ var SelectablePolygon = L.GeoJSON.extend({
 	},
 	toggleSelect: function (){
 		if(this.selected){
-			this.setStyle({
-				fillColor: '#bdd7e7',
-				fillOpacity: 0.2,
-				color: '#2171b5',
-				weight: 3,
-				dashArray: '',
-			});
+			this.setStyle(this.unselectedStyle);
 			this.selected = false;
 		}
 		else{
-			this.setStyle({
-				fillColor: '#6baed6',
-				fillOpacity: 0.7,
-				color: '#2171b5',
-				weight: 4,
-				dashArray: '',
-			});
+			this.setStyle(this.selectedStyle);
 			this.selected = true;
 		}
 	},
 	_highlight: function(e){
-		e.target.setStyle({
-			fillColor: '#6baed6',
-			fillOpacity: 0.7,
-			color: '#2171b5',
-			weight: 4,
-			dashArray: '',
-		});
+		e.target.setStyle(this.highlightStyle);
 		info.update(this);
 		if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
         	e.target.bringToFront();
@@ -51,22 +48,10 @@ var SelectablePolygon = L.GeoJSON.extend({
 	},
 	_unhighlight: function(e){
 		if(e.target.selected){
-			e.target.setStyle({
-				fillColor: '#6baed6',
-				fillOpacity: 0.7,
-				color: '#2171b5',
-				weight: 3,
-				dashArray: '',
-			});
+			e.target.setStyle(this.selectedStyle);
 		}
 		else{
-			e.target.setStyle({
-				fillColor: '#bdd7e7',
-				fillOpacity: 0.2,
-				color: '#2171b5',
-				weight: 2,
-				dashArray: '',
-			});
+			e.target.setStyle(this.unselectedStyle);
 		}
 		info.update();
 	}
@@ -105,9 +90,10 @@ var SelectableRegion = SelectablePolygon.extend({
 		SelectablePolygon.prototype.toggleSelect.call(this);
 		//select todas las provincias
 	},
-	expand: function(){
+	expand: function(fitBounds){
 		if(!this.selected){
-			mymap.fitBounds(this.getBounds());
+			if(fitBounds)
+				mymap.fitBounds(this.getBounds());
 			//draw provincias
 			for(var i =0 ; i < this.p_data.length; i++){
 				if(this.provincias[i]==null){
@@ -119,26 +105,15 @@ var SelectableRegion = SelectablePolygon.extend({
 					this.provincias[i].addTo(mymap);
 					//unHighlight in case it stayed highlighted after contraction
 					if(this.provincias[i].selected){
-						this.provincias[i].setStyle({
-							fillColor: '#6baed6',
-							fillOpacity: 0.7,
-							color: '#2171b5',
-							weight: 3,
-							dashArray: '',
-						});
+						this.provincias[i].setStyle(this.provincias[i].selectedStyle);
 					}
 					else{
-						this.provincias[i].setStyle({
-							fillColor: '#bdd7e7',
-							fillOpacity: 0.2,
-							color: '#2171b5',
-							weight: 2,
-							dashArray: '',
-						});
+						this.provincias[i].setStyle(this.provincias[i].unselectedStyle);
 					}
 				}
 			}
 			mymap.removeLayer(this);
+			return this.provincias;
 		}
 	},
 	collapse: function(){
@@ -168,6 +143,27 @@ var SelectableProvincia = SelectablePolygon.extend({
 	comunas: null,
 	parent: null,
 	name: null,
+	selectedStyle:{
+		fillColor: '#b2df8a',
+		fillOpacity: 0.8,
+		color: '#33a02c',
+		weight: 3,
+		dashArray: ''
+	},
+	unselectedStyle:{
+		fillColor: '#b2df8a',
+		fillOpacity: 0.2,
+		color: '#33a02c',
+		weight: 2,
+		dashArray: ''
+	},
+	highlightStyle:{
+		fillColor: '#b2df8a',
+		fillOpacity: 0.8,
+		color: '#33a02c',
+		weight: 4,
+		dashArray: ''
+	},
 	init: function(c_data, name, parent){
 		SelectablePolygon.prototype.init.call(this);
 		this.c_data = c_data;
@@ -194,39 +190,29 @@ var SelectableProvincia = SelectablePolygon.extend({
 		SelectablePolygon.prototype.toggleSelect.call(this);
 		//select todas las comunas
 	},
-	expand: function(){
+	expand: function(fitBounds=true){
 		if(!this.selected){
-			mymap.fitBounds(this.getBounds());
+			if(fitBounds)
+				mymap.fitBounds(this.getBounds());
 			for(var i=0; i<this.c_data.length; i++){
 				if(this.comunas[i]==null){
 					this.comunas[i] = new SelectableComuna(JSON.parse(this.c_data[i]['st_asgeojson']));
-					this.comunas[i].init(this,this.c_data[i]['nombre']);
+					this.comunas[i].init(this.c_data[i]['nombre'],this);
 					this.comunas[i].addTo(mymap);
 				}
 				else{
 					this.comunas[i].addTo(mymap);
 					//unHighlight in case it stayed highlighted after contraction
 					if(this.comunas[i].selected){
-						this.comunas[i].setStyle({
-							fillColor: '#6baed6',
-							fillOpacity: 0.7,
-							color: '#2171b5',
-							weight: 3,
-							dashArray: '',
-						});
+						this.comunas[i].setStyle(this.comunas[i].selectedStyle);
 					}
 					else{
-						this.comunas[i].setStyle({
-							fillColor: '#bdd7e7',
-							fillOpacity: 0.2,
-							color: '#2171b5',
-							weight: 2,
-							dashArray: '',
-						});
+						this.comunas[i].setStyle(this.comunas[i].unselectedStyle);
 					}
 				}
 			}
 			mymap.removeLayer(this);
+			return this.comunas;
 		}
 	},
 	contract: function(){
@@ -266,7 +252,28 @@ var SelectableProvincia = SelectablePolygon.extend({
 var SelectableComuna = SelectablePolygon.extend({
 	parent: null,
 	name: null,
-	init: function(parent,name){
+	selectedStyle:{
+		fillColor: '#fb9a99',
+		fillOpacity: 0.8,
+		color: '#e31a1c',
+		weight: 3,
+		dashArray: ''
+	},
+	unselectedStyle:{
+		fillColor: '#fb9a99',
+		fillOpacity: 0.2,
+		color: '#e31a1c',
+		weight: 2,
+		dashArray: ''
+	},
+	highlightStyle:{
+		fillColor: '#fb9a99',
+		fillOpacity: 0.8,
+		color: '#e31a1c',
+		weight: 4,
+		dashArray: ''
+	},
+	init: function(name, parent){
 		this.parent = parent;
 		this.name = name;
 		SelectablePolygon.prototype.init.call(this);
@@ -278,3 +285,25 @@ var SelectableComuna = SelectablePolygon.extend({
 		this.parent.collapse();
 	}
 });
+
+
+/*****UTILITY******/
+
+function expandAll(){
+	for(var region of fe_regiones){
+		if(!region.selected){
+			provs = region.expand(false);
+			for(var prov of provs){
+				if(!prov.selected)
+					prov.expand(false);
+			}
+		}
+	}
+}
+
+function collapseAll(){
+	for(var region of fe_regiones){
+		if(!region.selected)
+			region.collapse();
+	}
+}

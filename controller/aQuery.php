@@ -35,7 +35,7 @@
 
 	foreach($sources as $source){
 		$result = querySource($source, $comunas, $timeSpan, $extraKW[$source]);
-		$results[$source] = $result;
+		$results[$source] = json_decode($result);
 	}
 
 	//print_r($results);

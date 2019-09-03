@@ -1,5 +1,9 @@
 //Creating SelectablePolygons
 
+//stores region objects
+var n_regiones = region_vect.length;
+var fe_regiones = Array(n_regiones);
+
 for(var i=0; i < n_regiones; i++){
 	var region = JSON.parse(region_vect[i]['st_asgeojson']);
 	var provincias_reg = provincia_vect[region_vect[i]['nombre']];

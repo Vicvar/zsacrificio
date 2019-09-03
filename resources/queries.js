@@ -55,11 +55,11 @@ var region_to_provincias = new Map();
 for(r in provincia_vect){
 	//console.log(r,provincia_vect[r]);
 	var r_prov= [];
-	for(p of provincia_vect[r])
+	for(p in provincia_vect[r])
 		r_prov.push(p.nombre);
 	region_to_provincias.set(r,r_prov);
 }
-//console.log(region_to_provincias);
+console.log(region_to_provincias);
 
 //provincia -> comunas
 var provincia_to_comunas = new Map();
@@ -74,6 +74,7 @@ for(p in comuna_vect){
 	}
 	provincia_to_comunas.set(p,p_com);
 }
+console.log(provincia_to_comunas);
 
 
 //Get all selected areas
@@ -198,11 +199,15 @@ function aTest(){
 
 	phttp.onreadystatechange = function(){
 		if (this.readyState == 4 && this.status == 200) {
-			//console.log(this.responseText);
-			var q_results = JSON.parse(this.responseText);
+			try{
+				var q_results = JSON.parse(this.responseText);
+				displayResults(q_results, markers);
+			}
+			catch(err){
+				console.log(err);
+				console.log(this.responseText);
+			}
 			//console.log(q_results);
-			displayResults(q_results);
-			mymap.addLayer(markers);
 			//console.log('Empty responseText');
 		}
 	};

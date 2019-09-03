@@ -29,24 +29,20 @@
 
 		<div id="side-bar">
 			<div id="global-selector">
-				<p>Selector de granularidad de resultados y mapa: res/sol</p>
-				<div id="sel-fuente">
-					Fuente:<br>
-					<input type="radio" name="fuente" value="0" checked=""> SEIA<br>
-					<input type="radio" name="fuente" value="1"> COES
-						<button type="button" onclick="clearResults()">Limpiar resultados</button>
-						<button type="button" onclick="aTest()">Buscar</button>
-				</div>
+				<button type="button" onclick="clearResults()">Ocultar resultados</button>
+				<button type="button" onclick="aTest()">Buscar</button>
+				<button type="button" onclick="expandAll()">Expandir todo</button>
+				<button type="button" onclick="collapseAll()">Colapsar todo</button>
 			</div>
 			<div id="search-tabs">
 				<div class="tabs">
-					<button class="tab-button" onclick="showForm(event,'seia')">SEIA</button>
-					<button class="tab-button active" onclick="showForm(event,'coes')">COES</button>
+					<button class="tab-button active" onclick="showForm(event,'seia')">SEIA</button>
+					<button class="tab-button" onclick="showForm(event,'coes')">COES</button>
 					<button class="tab-button" onclick="showForm(event,'lobby')">Lobby</button>
 				</div>
 				<div id="search">
 					<!--Formularios-->
-					<div id="seia" class="search-form">
+					<div id="seia" class="search-form active">
 						<h4>Sistema de Evaluación de Impacto Ambiental</h4>
 						<br>
 						
@@ -92,7 +88,7 @@
 							</div>
 						</div>
 					</div>
-					<div id="coes" class="search-form active">
+					<div id="coes" class="search-form">
 						<h4>Observatorio de conflictos sociales</h4>
 						<br>
 						<label><input class="source-cb" type="checkbox" value="coes"> Usar fuente </label>
@@ -208,18 +204,15 @@
 
 			//Getting territorial divisions from inital DB load used in populate_map.js
 
-			var region_vect = <?php echo json_encode($regiones)?>;
-			var provincia_vect = <?php echo json_encode($provincias)?>;
-			var comuna_vect = <?php echo json_encode($comunas)?>;
-
-			var n_regiones = <?php echo count($regiones)?>;
-			var fe_regiones = Array(n_regiones); //stores region objects
+			var region_vect = <?php echo json_encode($r)?>;
+			var provincia_vect = <?php echo json_encode($provincias2)?>;
+			var comuna_vect = <?php echo json_encode($comunas2)?>;
+			console.log("region_vect:",region_vect,"provincia_vect:",provincia_vect,"comuna_vect:",comuna_vect);
 
 			//table data for SEIA
 			var tipo_pres = <?php echo json_encode($tipo_presentacion) ?>;
 			var estado = <?php echo json_encode($estado) ?>;
 			var sector_productivo = <?php echo json_encode($sector_productivo) ?>;
-			console.log(estado);
 
 			//Getting table data for selectors used in multiselectors.js
 			var elementos_demanda = <?php  echo json_encode($elemento_demanda)?>;
