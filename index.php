@@ -29,10 +29,21 @@
 
 		<div id="side-bar">
 			<div id="global-selector">
-				<button type="button" onclick="clearResults()">Ocultar resultados</button>
-				<button type="button" onclick="aTest()">Buscar</button>
-				<button type="button" onclick="expandAll()">Expandir todo</button>
-				<button type="button" onclick="collapseAll()">Colapsar todo</button>
+				<div class="selector-button-container">
+					<button type="button" onclick="clearResults()">Ocultar resultados</button>
+				</div>
+				<div class="selector-button-container">					
+					<button type="button" onclick="unChoroplethize()">Volver mapa a selector</button>
+				</div>
+				<div class="selector-button-container">					
+					<button type="button" onclick="aTest()">Buscar</button>
+				</div>
+				<div class="selector-button-container">					
+					<button type="button" onclick="expandAll()">Expandir todo</button>
+				</div>
+				<div class="selector-button-container">					
+					<button type="button" onclick="collapseAll()">Colapsar todo</button>
+				</div>
 			</div>
 			<div id="search-tabs">
 				<div class="tabs">
@@ -207,7 +218,7 @@
 			var region_vect = <?php echo json_encode($r)?>;
 			var provincia_vect = <?php echo json_encode($provincias2)?>;
 			var comuna_vect = <?php echo json_encode($comunas2)?>;
-			console.log("region_vect:",region_vect,"provincia_vect:",provincia_vect,"comuna_vect:",comuna_vect);
+			//console.log("region_vect:",region_vect,"provincia_vect:",provincia_vect,"comuna_vect:",comuna_vect);
 
 			//table data for SEIA
 			var tipo_pres = <?php echo json_encode($tipo_presentacion) ?>;

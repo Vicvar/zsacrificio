@@ -4,7 +4,7 @@ var SelectablePolygon = L.GeoJSON.extend({
 		fillColor: '#a6cee3',
 		fillOpacity: 0.8,
 		color: '#1f78b4',
-		weight: 3,
+		weight: 2,
 		dashArray: ''
 	},
 	unselectedStyle:{
@@ -48,27 +48,43 @@ var SelectablePolygon = L.GeoJSON.extend({
 	},
 	_unhighlight: function(e){
 		if(e.target.selected){
-			e.target.setStyle(this.selectedStyle);
+			e.target.setStyle(e.target.selectedStyle);
 		}
 		else{
-			e.target.setStyle(this.unselectedStyle);
+			e.target.setStyle(e.target.unselectedStyle);
 		}
 		info.update();
+	},
+	_fUnhighlight(){
+		if(this.selected){
+			this.setStyle(this.selectedStyle);
+		}
+		else{
+			this.setStyle(this.unselectedStyle);
+		}
 	}
 });
+
+
+/***********************************************************/
+/******************** SELECTABLE REGION ********************/
+/***********************************************************/
+
 
 var SelectableRegion = SelectablePolygon.extend({
 	p_data: null,
 	provincias: null,
 	name: null,
-	init: function (p_data,name){
+	id: null,
+	choroValue: null,
+	init: function (p_data,name,id){
 		SelectablePolygon.prototype.init.call(this);
 		//add mouse events:
 		//-zoom and show provincias on double click
 		//-zoomout and hide unselected provincias on rightclick(contextmenu)
 		this.p_data = p_data;
-		this.provincias = new Array(p_data.length);
 		this.name = name;
+		this.id = id;
 		this.on({
 			dblclick: this.expand
 		});
@@ -77,11 +93,11 @@ var SelectableRegion = SelectablePolygon.extend({
 		if(!this.selected && this.provincias != null)
 			this.fCollapse();
 		else if(this.selected && this.provincias != null){
-			for(var i = 0; i < this.provincias.length; i++){
-				if(this.provincias[i]!=null){
-					this.provincias[i].drawSelectedChildren();
-					if(this.provincias[i].selected){
-						this.provincias[i].addTo(mymap);
+			for(var p in this.provincias){
+				if(this.provincias[p]!=null){
+					this.provincias[p].drawSelectedChildren();
+					if(this.provincias[p].selected){
+						this.provincias[p].addTo(mymap);
 					}
 				}
 			}
@@ -90,25 +106,28 @@ var SelectableRegion = SelectablePolygon.extend({
 		SelectablePolygon.prototype.toggleSelect.call(this);
 		//select todas las provincias
 	},
-	expand: function(fitBounds){
+	expand: function(fitBounds=true){
 		if(!this.selected){
 			if(fitBounds)
 				mymap.fitBounds(this.getBounds());
 			//draw provincias
-			for(var i =0 ; i < this.p_data.length; i++){
-				if(this.provincias[i]==null){
-					this.provincias[i] = new SelectableProvincia(JSON.parse(this.p_data[i]['st_asgeojson']));
-					this.provincias[i].init(this.p_data[i].comunas,this.p_data[i]['nombre'],this);
-					this.provincias[i].addTo(mymap);
+			if(this.provincias==null){
+				this.provincias = {};
+				for(var i = 0; i < this.p_data.length; i++){
+					this.provincias[this.p_data[i].id] = new SelectableProvincia(JSON.parse(this.p_data[i]['st_asgeojson']));
+					this.provincias[this.p_data[i].id].init(this.p_data[i].comunas,this.p_data[i]['nombre'], this.p_data[i]['id'],this);
+					this.provincias[this.p_data[i].id].addTo(mymap);
 				}
-				else{
-					this.provincias[i].addTo(mymap);
+			}
+			else{
+				for(var p in this.provincias){
+					this.provincias[p].addTo(mymap);
 					//unHighlight in case it stayed highlighted after contraction
-					if(this.provincias[i].selected){
-						this.provincias[i].setStyle(this.provincias[i].selectedStyle);
+					if(this.provincias[p].selected){
+						this.provincias[p].setStyle(this.provincias[p].selectedStyle);
 					}
 					else{
-						this.provincias[i].setStyle(this.provincias[i].unselectedStyle);
+						this.provincias[p].setStyle(this.provincias[p].unselectedStyle);
 					}
 				}
 			}
@@ -116,11 +135,32 @@ var SelectableRegion = SelectablePolygon.extend({
 			return this.provincias;
 		}
 	},
+	choroExpand: function(fitBounds=true){
+		if(fitBounds)
+			mymap.fitBounds(this.getBounds());
+		//draw provincias
+		if(this.provincias==null){
+			this.provincias = {};
+			for(var i = 0; i < this.p_data.length; i++){
+				this.provincias[this.p_data[i].id] = new SelectableProvincia(JSON.parse(this.p_data[i]['st_asgeojson']));
+				this.provincias[this.p_data[i].id].init(this.p_data[i].comunas,this.p_data[i]['nombre'], this.p_data[i]['id'],this);
+				this.provincias[this.p_data[i].id].addTo(mymap);
+			}
+		}
+		else{
+			for(var p in this.provincias){
+				//Keeping Choropleth Style
+				this.provincias[p].addTo(mymap);
+			}
+		}
+		mymap.removeLayer(this);
+		return this.provincias;
+	},
 	collapse: function(){
-		for(var i = 0; i < this.provincias.length; i++){
-			this.provincias[i].collapse();
-			if(!this.provincias[i].selected){
-				mymap.removeLayer(this.provincias[i]);
+		for(var p in this.provincias){
+			this.provincias[p].collapse();
+			if(!this.provincias[p].selected){
+				mymap.removeLayer(this.provincias[p]);
 				//if(this.provincias[i].childless())
 				//	this.provincias[i]=null;
 			}
@@ -129,28 +169,102 @@ var SelectableRegion = SelectablePolygon.extend({
 		this.bringToFront();
 	},
 	fCollapse: function(){
-		for(var i = 0; i < this.provincias.length; i++){
-			if(this.provincias[i]!=null){
-				this.provincias[i].fCollapse();
-				mymap.removeLayer(this.provincias[i]);
+		for(var p in this.provincias){
+			if(this.provincias[p]!=null){
+				this.provincias[p].fCollapse();
+				mymap.removeLayer(this.provincias[p]);
 			}
 		}
+		if(!mymap.hasLayer(this)){
+			this.addTo(mymap);
+			this.bringToFront();
+		}
 	},
-	choropletize(val_comunas){
-		return;
+	choroplethize(results, r_max_val, p_max_val, c_max_val){
+		//Setting values
+		this.setChoroValues(results, r_max_val, p_max_val, c_max_val);
+		//unsetting mouse events
+		this.off({
+			dblclick: this.expand,
+			click: this.toggleSelect,
+			mouseover: this._highlight,
+			mouseout: this._unhighlight
+		});
+		this.on({
+			mouseover: this.info_update
+		});
+	},
+	unChoroplethize(){
+		//Asumes its already choropletized
+		this.on({
+			dblclick: this.expand,
+			click: this.toggleSelect,
+			mouseover: this._highlight,
+			mouseout: this._unhighlight
+		});
+		this._fUnhighlight();
+		for(var p in this.provincias){
+			this.provincias[p].unChoroplethize();
+		}
+	},
+	setChoroValues(results, r_max_val, p_max_val, c_max_val){
+		//Asumes its already choropletized
+		var value = results.value;
+		if(value!=undefined){
+			var color_value = Math.floor(255-((results.value*255)/r_max_val));
+			this.setStyle({
+				fillColor: 'rgb(225,'+color_value.toString()+',30)',
+				fillOpacity: 0.7,
+				color: 'rgb(255,255,255)',
+				weight: 2,
+				dashArray: ''
+			});
+			this.choroValue = value;
+		}
+		else{
+			this.setStyle({
+				fillColor: 'rgb(200,200,200)',
+				fillOpacity: 0.7,
+				color: 'rgb(255,255,255)',
+				weight: 2,
+				dashArray: ''
+			});
+			this.choroValue = null;
+		}
+		//Setting children values
+		if(this.provincias==null){
+			this.choroExpand(false);
+		}
+		var p_results = results.p_choro_data;
+		for(var p in this.provincias){
+			var id = this.provincias[p].id;
+			this.provincias[p].choroplethize(p_results[id],p_max_val,c_max_val);
+		}
+		this.fCollapse();
+	},
+	info_update(){
+		info.update(this);
 	}
 });
+
+
+/**************************************************************/
+/******************** SELECTABLE PROVINCIA ********************/
+/**************************************************************/
+
 
 var SelectableProvincia = SelectablePolygon.extend({
 	c_data: null,
 	comunas: null,
 	parent: null,
 	name: null,
+	id: null,
+	choroValue: null,
 	selectedStyle:{
 		fillColor: '#b2df8a',
 		fillOpacity: 0.8,
 		color: '#33a02c',
-		weight: 3,
+		weight: 2,
 		dashArray: ''
 	},
 	unselectedStyle:{
@@ -167,12 +281,12 @@ var SelectableProvincia = SelectablePolygon.extend({
 		weight: 4,
 		dashArray: ''
 	},
-	init: function(c_data, name, parent){
+	init: function(c_data, name, id, parent){
 		SelectablePolygon.prototype.init.call(this);
 		this.c_data = c_data;
-		this.comunas = new Array(c_data.length);
 		this.parent = parent;
 		this.name = name;
+		this.id = id;
 		this.on({
 			dblclick: this.expand,
 			contextmenu: this.contract
@@ -182,10 +296,10 @@ var SelectableProvincia = SelectablePolygon.extend({
 		if(!this.selected && this.comunas != null)
 			this.fCollapse();
 		else if(this.selected && this.comunas != null){
-			for(var i = 0; i < this.comunas.length; i++){
-				if(this.comunas[i]!=null){
-					if(this.comunas[i].selected)
-						this.comunas[i].addTo(mymap);
+			for(var c in this.comunas){
+				if(this.comunas[c]!=null){
+					if(this.comunas[c].selected)
+						this.comunas[c].addTo(mymap);
 				}
 			}
 			this.bringToFront();
@@ -197,69 +311,169 @@ var SelectableProvincia = SelectablePolygon.extend({
 		if(!this.selected){
 			if(fitBounds)
 				mymap.fitBounds(this.getBounds());
-			for(var i=0; i<this.c_data.length; i++){
-				if(this.comunas[i]==null){
-					this.comunas[i] = new SelectableComuna(JSON.parse(this.c_data[i]['st_asgeojson']));
-					this.comunas[i].init(this.c_data[i]['nombre'],this);
-					this.comunas[i].addTo(mymap);
+			if(this.comunas == null){
+				this.comunas = {};
+				for(var i = 0; i < this.c_data.length; i++){
+					this.comunas[this.c_data[i].id] = new SelectableComuna(JSON.parse(this.c_data[i]['st_asgeojson']));
+					this.comunas[this.c_data[i].id].init(this.c_data[i]['nombre'],this.c_data[i]['id'],this);
+					this.comunas[this.c_data[i].id].addTo(mymap);
 				}
-				else{
-					this.comunas[i].addTo(mymap);
+			}
+			else{
+				for(var c in this.comunas){
+					this.comunas[c].addTo(mymap);
 					//unHighlight in case it stayed highlighted after contraction
-					if(this.comunas[i].selected){
-						this.comunas[i].setStyle(this.comunas[i].selectedStyle);
+					if(this.comunas[c].selected){
+						this.comunas[c].setStyle(this.comunas[c].selectedStyle);
 					}
 					else{
-						this.comunas[i].setStyle(this.comunas[i].unselectedStyle);
-					}
+						this.comunas[c].setStyle(this.comunas[c].unselectedStyle);
+					}		
 				}
 			}
 			mymap.removeLayer(this);
 			return this.comunas;
 		}
 	},
+	choroExpand: function(fitBounds=true){
+		if(fitBounds)
+			mymap.fitBounds(this.getBounds());
+		if(this.comunas == null){
+			this.comunas = {};
+			for(var i = 0; i < this.c_data.length; i++){
+				this.comunas[this.c_data[i].id] = new SelectableComuna(JSON.parse(this.c_data[i]['st_asgeojson']));
+				this.comunas[this.c_data[i].id].init(this.c_data[i]['nombre'],this.c_data[i]['id'],this);
+				this.comunas[this.c_data[i].id].addTo(mymap);
+			}
+		}
+		else{
+			for(var c in this.comunas){
+				this.comunas[c].addTo(mymap);	
+			}
+		}
+		mymap.removeLayer(this);
+		return this.comunas;
+	},
 	contract: function(){
 		this.parent.collapse();
 	},
 	collapse: function(){
-		for(var i = 0; i < this.comunas.length; i++){
-			if(this.comunas[i]!=null && !this.comunas[i].selected)
-				mymap.removeLayer(this.comunas[i]);
+		for(var c in this.comunas){
+			if(this.comunas[c]!=null && !this.comunas[c].selected)
+				mymap.removeLayer(this.comunas[c]);
 		}
 		this.addTo(mymap);
 		this.bringToFront();
 	},
 	fCollapse: function(){
-		for(var i = 0; i < this.comunas.length; i++){
-			if(this.comunas[i]!=null)
-				mymap.removeLayer(this.comunas[i]);
+		for(var c in this.comunas){
+			if(this.comunas[c]!=null)
+				mymap.removeLayer(this.comunas[c]);
+		}
+		if(!mymap.hasLayer(this)){
+			this.addTo(mymap);
+			this.bringToFront();
 		}
 	},
 	childless: function (){
-		for(var i = 0; i< this.comunas.length; i++){
-			if(this.comunas[i]!=null)
+		for(var c in this.comunas){
+			if(this.comunas[c]!=null)
 				return false;
 		}
 		return true;
 	},
 	drawSelectedChildren: function(){
-		for(var i = 0; i < this.comunas.length; i++){
-			if(this.comunas[i]!=null){
-				if(this.comunas[i].selected)
-					this.comunas[i].addTo(mymap);
+		for(var c in this.comunas){
+			if(this.comunas[c]!=null){
+				if(this.comunas[c].selected)
+					this.comunas[c].addTo(mymap);
 			}
 		}
+	},
+	choroplethize(results, p_max_val, c_max_val){
+		//Setting values
+		this.setChoroValues(results, p_max_val, c_max_val);
+		//unsetting mouse events
+		this.off({
+			dblclick: this.expand,
+			click: this.toggleSelect,
+			mouseover: this._highlight,
+			mouseout: this._unhighlight,
+			contextmenu: this.contract
+		});
+		this.on({
+			mouseover: this.info_update
+		})
+	},
+	unChoroplethize(){
+		//Asumes its already choropletized
+		this.on({
+			dblclick: this.expand,
+			click: this.toggleSelect,
+			mouseover: this._highlight,
+			mouseout: this._unhighlight,
+			contextmenu: this.contract
+		});
+		this._fUnhighlight();
+		for(var c in this.comunas){
+			this.comunas[c].unChoroplethize();
+		}
+	},
+	setChoroValues(results, p_max_val, c_max_val){
+		//Asumes its already choropletized
+		var value = results.value;
+		if(value!=undefined){
+			var color_value = Math.floor(255-((results.value*255)/c_max_val));
+			this.setStyle({
+				fillColor: 'rgb(225,'+color_value.toString()+',30)',
+				fillOpacity: 0.7,
+				color: 'rgb(255,255,255)',
+				weight: 2,
+				dashArray: ''
+			});
+			this.choroValue = value;
+		}
+		else{
+			this.setStyle({
+				fillColor: 'rgb(200,200,200)',
+				fillOpacity: 0.7,
+				color: 'rgb(255,255,255)',
+				weight: 2,
+				dashArray: ''
+			});
+			this.choroValue = null;
+		}
+		//Setting children values
+		if(this.comunas==null){
+			this.choroExpand(false);
+		}
+		var c_results = results.c_choro_data;
+		for(var c in this.comunas){
+			var id = this.comunas[c].id;
+			this.comunas[c].choroplethize(c_results[id],c_max_val);
+		}
+		this.fCollapse();
+	},
+	info_update(){
+		info.update(this);
 	}
 });
+
+
+/***********************************************************/
+/******************** SELECTABLE COMUNA ********************/
+/***********************************************************/
 
 var SelectableComuna = SelectablePolygon.extend({
 	parent: null,
 	name: null,
+	id: null,
+	choroValue: null,
 	selectedStyle:{
 		fillColor: '#fb9a99',
 		fillOpacity: 0.8,
 		color: '#e31a1c',
-		weight: 3,
+		weight: 2,
 		dashArray: ''
 	},
 	unselectedStyle:{
@@ -276,9 +490,10 @@ var SelectableComuna = SelectablePolygon.extend({
 		weight: 4,
 		dashArray: ''
 	},
-	init: function(name, parent){
+	init: function(name, id, parent){
 		this.parent = parent;
 		this.name = name;
+		this.id = id;
 		SelectablePolygon.prototype.init.call(this);
 		this.on({
 			contextmenu: this.contract
@@ -286,6 +501,56 @@ var SelectableComuna = SelectablePolygon.extend({
 	},
 	contract: function(){
 		this.parent.collapse();
+	},
+	choroplethize(value, c_max_val){
+		//Setting own values
+		this.setChoroValues(value,c_max_val);
+		//unsetting mouse events
+		this.off({
+			click: this.toggleSelect,
+			mouseover: this._highlight,
+			mouseout: this._unhighlight,
+			contextmenu: this.contract
+		});
+		this.on({
+			mouseover: this.info_update
+		})
+	},
+	unChoroplethize(){
+		//Asumes its already choropletized
+		this.on({
+			click: this.toggleSelect,
+			mouseover: this._highlight,
+			mouseout: this._unhighlight,
+			contextmenu: this.contract
+		});
+		this._fUnhighlight();
+	},
+	setChoroValues(value, c_max_val){
+		if(value!=undefined){
+			var color_value = Math.floor(255-((value*255)/c_max_val));
+			this.setStyle({
+				fillColor: 'rgb(225,'+color_value.toString()+',30)',
+				fillOpacity: 0.7,
+				color: 'rgb(255,255,255)',
+				weight: 2,
+				dashArray: ''
+			});
+			this.choroValue = value;
+		}
+		else{
+			this.setStyle({
+				fillColor: 'rgb(200,200,200)',
+				fillOpacity: 0.7,
+				color: 'rgb(255,255,255)',
+				weight: 2,
+				dashArray: ''
+			});
+			this.choroValue = null;
+		}
+	},
+	info_update(){
+		info.update(this);
 	}
 });
 
@@ -296,9 +561,9 @@ function expandAll(){
 	for(var region of fe_regiones){
 		if(!region.selected){
 			provs = region.expand(false);
-			for(var prov of provs){
-				if(!prov.selected)
-					prov.expand(false);
+			for(var p in provs){
+				if(!provs[p].selected)
+					provs[p].expand(false);
 			}
 		}
 	}
@@ -307,6 +572,6 @@ function expandAll(){
 function collapseAll(){
 	for(var region of fe_regiones){
 		if(!region.selected)
-			region.collapse();
+			region.fCollapse();
 	}
 }

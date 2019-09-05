@@ -17,7 +17,17 @@
 		}
 
 		public function query($comunas, $timeSpan, $extraKWValues){
-			$cFilter = $this->multExactValuesFilter("cp1", "id_comuna", $comunas);
+			$sComunas .= $this->multExactValuesFilter("cp1", "id_comuna", $comunas);
+
+			if(count($comunas)>0)
+				$cFilter = "(SELECT *
+				FROM seia.proyecto as p1
+				WHERE p1.id_proyecto in (SELECT id_proyecto
+					FROM seia.comunas_de_proyecto as cp1
+					WHERE ".$sComunas."
+					GROUP BY cp1.id_proyecto))";
+			else
+				$cFilter = "seia.proyecto";
 
 			$sDate = strtotime($timeSpan[0]);
 			$eDate = strtotime($timeSpan[1]);
@@ -31,6 +41,7 @@
 			//print_r($extraValues);
 			//echo "<br>";
 
+			/* OLD QUERY GETS ONLY SELECTED COMUNAS OF PROJECTS
 			$pgqs = "SELECT json_agg(res)
 			FROM 
 				(SELECT *, json_build_object('start', p.fecha_presentado, 'end', p.fecha_calificado) as time_span
@@ -38,10 +49,18 @@
 				INNER JOIN 
 					(SELECT cp1.id_proyecto, json_agg(cp1.id_comuna) as comunas
 					FROM seia.comunas_de_proyecto as cp1
-					WHERE ".$cFilter." GROUP BY cp1.id_proyecto) as cp
+					".$cFilter." GROUP BY cp1.id_proyecto) as cp
 				ON p.id_proyecto = cp.id_proyecto 
 				WHERE p.fecha_presentado BETWEEN '".$sDate."' and '".$eDate."'
-				".$extraValues.") as res;";
+				".$extraValues.") as res;";*/
+
+			$pgqs = "SELECT json_agg(res)
+			FROM (SELECT p.id_proyecto, p.nombre, p.tipo, p.tipologia, p.titular, p.inversion, p.estado, p.fecha_presentado, p.fecha_calificado, p.sector_productivo, p.latitud, p.longitud, json_build_object('start', p.fecha_presentado, 'end', p.fecha_calificado) as time_span, json_agg(cp.id_comuna) as comunas
+			FROM ".$cFilter." as p
+				INNER JOIN seia.comunas_de_proyecto as cp
+				ON p.id_proyecto = cp.id_proyecto
+			WHERE p.fecha_presentado BETWEEN '".$sDate."' and '".$eDate."' ".$extraValues."
+			GROUP BY p.id_proyecto, p.nombre, p.tipo, p.tipologia, p.titular, p.inversion, p.estado, p.fecha_presentado, p.fecha_calificado, p.sector_productivo, p.latitud, p.longitud) as res;";
 
 			//echo "<br>Query string: <br>".$pgqs;
 

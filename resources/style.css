@@ -16,9 +16,15 @@
 	position: relative;
 	height: 20vh;
 	min-height: 150px;
-	display:grid;
+	column-count: 2;
 	background-color: beige;
 	padding: 10px;
+}
+
+#selector-button-container{
+	display: grid;
+	padding: 10px;
+	width: 100%;
 }
 
 #side-bar{

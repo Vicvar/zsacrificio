@@ -85,7 +85,7 @@ var getSelected = function(){
 
 	//Want to store everything selected as comuna ids
 	//selected comunas stores comuna names
-	for(fer of fe_regiones){
+	for(var fer of fe_regiones){
 		if(fer.selected){
 			//get provincias of selected regiones
 			//for each, get their comunas and add them to selected comunas
@@ -93,20 +93,16 @@ var getSelected = function(){
 			for(p of fer_provincias)
 				selected_comunas = selected_comunas.concat(provincia_to_comunas.get(p));
 		}
-		else{
-			//selected provincias from unselected regiones transformed to comunas and added to selected comunas
-			for(fep of fer.provincias){//fep is an empty array since region init
-				if(fep!=null){
-					if(fep.selected)
-						selected_comunas = selected_comunas.concat(provincia_to_comunas.get(fep.name));
-					else if(fep.comunas!=null){
-						for(fec of fep.comunas){//pushing directly to id
-							if(fec!=null){
-								if(fec.selected){
-									selected_comunas_ids.push(comuna_to_id.get(fec.name));
-								}
-							}
-						}
+		else if(fer.provincias!=null){
+			for(var p in fer.provincias){
+				var fep = fer.provincias[p];
+				if(fep.selected)
+					selected_comunas = selected_comunas.concat(provincia_to_comunas.get(fep.name));
+				else if(fep.comunas!=null){
+					for(var c in fep.comunas){
+						var fec = fep.comunas[c];
+						if(fec.selected)
+							selected_comunas_ids.push(comuna_to_id.get(fec.name));
 					}
 				}
 			}
@@ -116,7 +112,7 @@ var getSelected = function(){
 	for(sc of selected_comunas){
 		selected_comunas_ids.push(comuna_to_id.get(sc));
 	}
-	return JSON.stringify(selected_comunas_ids);
+	return selected_comunas_ids;
 };
 	
 var clearResults = function(){
@@ -139,7 +135,7 @@ function requestUrlString(){
 	base_url = "controller/aQuery.php";
 
 	//selected Comunas
-	c = getSelected();
+	c = JSON.stringify(getSelected());
 
 	//selected time span
 	time_span = [document.getElementById('f-inicio').value, document.getElementById('f-fin').value];
@@ -151,6 +147,11 @@ function requestUrlString(){
 		if(cb.checked)
 			sources.push(cb.value);
 	}
+	if(sources.length==0){
+		alert("Se debe seleccionar alguna fuente");
+		return false;
+	}
+
 	s = JSON.stringify(sources);
 
 	//source specific attribute values (for all sources, in an object)
@@ -194,6 +195,8 @@ function aTest(){
 	
 	var phttp = new XMLHttpRequest();
 	var rurl = requestUrlString();
+	if(!rurl)
+		return;
 	
 	markers.clearLayers();
 

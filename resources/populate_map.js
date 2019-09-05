@@ -13,7 +13,7 @@ for(var i=0; i < n_regiones; i++){
 	}
 
 	fe_regiones[i] = new SelectableRegion(region);
-	fe_regiones[i].init(provincias_reg,region_vect[i]['nombre']);
+	fe_regiones[i].init(provincias_reg,region_vect[i]['nombre'],region_vect[i]['id']);
 	fe_regiones[i].addTo(mymap);
 
 }
@@ -40,7 +40,8 @@ info.update = function(props){
 	this._div.innerHTML = 
 	(props ? '<h3>'+props.name+'</h3>'+
 	(props.c_data ? '<h4>Comunas</h4>'+comunasInProvinca(props):'')+
-	(props.p_data ? '<h4>Provincias</h4>'+provinciasInRegion(props):'') : 'Información de zona');
+	(props.p_data ? '<h4>Provincias</h4>'+provinciasInRegion(props):'')+
+	(props.choroValue ? '<h4>N° de resultados</h4>'+props.choroValue:'') : 'Información de zona');
 
 };
 
@@ -51,3 +52,9 @@ info.onAdd = function(mymap){
 };
 
 info.addTo(mymap);
+
+var choroInfo = L.control();
+
+choroInfo.update = function(max_value){
+	
+}
