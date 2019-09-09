@@ -1,23 +1,30 @@
+const region_color = '#f7fcb9';
+const region_fill = '#addd8e';
+const prov_color = '#8856a7';
+const prov_fill = '#9ebcda';
+const com_color = '#de2d26';
+const com_fill = '#fc9272';
+
 var SelectablePolygon = L.GeoJSON.extend({
 	selected: false,
 	selectedStyle:{
-		fillColor: '#a6cee3',
+		fillColor: region_fill,
 		fillOpacity: 0.8,
-		color: '#1f78b4',
+		color: region_color,
 		weight: 2,
 		dashArray: ''
 	},
 	unselectedStyle:{
-		fillColor: '#a6cee3',
+		fillColor: region_fill,
 		fillOpacity: 0.2,
-		color: '#1f78b4',
+		color: region_color,
 		weight: 2,
 		dashArray: ''
 	},
 	highlightStyle:{
-		fillColor: '#a6cee3',
+		fillColor: region_fill,
 		fillOpacity: 0.8,
-		color: '#1f78b4',
+		color: region_color,
 		weight: 4,
 		dashArray: ''
 	},
@@ -191,11 +198,16 @@ var SelectableRegion = SelectablePolygon.extend({
 			mouseout: this._unhighlight
 		});
 		this.on({
+			dblclick: this.finerGran,
 			mouseover: this.info_update
 		});
 	},
 	unChoroplethize(){
 		//Asumes its already choropletized
+		this.off({
+			dblclick: this.finerGran,
+			mouseover: this.info_update
+		});
 		this.on({
 			dblclick: this.expand,
 			click: this.toggleSelect,
@@ -242,8 +254,12 @@ var SelectableRegion = SelectablePolygon.extend({
 		}
 		this.fCollapse();
 	},
+	//auxialiary functions for events
 	info_update(){
 		info.update(this);
+	},
+	finerGran(){
+		setGranProvincia();
 	}
 });
 
@@ -261,23 +277,23 @@ var SelectableProvincia = SelectablePolygon.extend({
 	id: null,
 	choroValue: null,
 	selectedStyle:{
-		fillColor: '#b2df8a',
+		fillColor: prov_fill,
 		fillOpacity: 0.8,
-		color: '#33a02c',
+		color: prov_color,
 		weight: 2,
 		dashArray: ''
 	},
 	unselectedStyle:{
-		fillColor: '#b2df8a',
+		fillColor: prov_fill,
 		fillOpacity: 0.2,
-		color: '#33a02c',
+		color: prov_color,
 		weight: 2,
 		dashArray: ''
 	},
 	highlightStyle:{
-		fillColor: '#b2df8a',
+		fillColor: prov_fill,
 		fillOpacity: 0.8,
-		color: '#33a02c',
+		color: prov_color,
 		weight: 4,
 		dashArray: ''
 	},
@@ -402,11 +418,18 @@ var SelectableProvincia = SelectablePolygon.extend({
 			contextmenu: this.contract
 		});
 		this.on({
-			mouseover: this.info_update
+			dblclick: this.finerGran,
+			mouseover: this.info_update,
+			contextmenu: this.coarserGran
 		})
 	},
 	unChoroplethize(){
 		//Asumes its already choropletized
+		this.off({
+			dblclick: this.finerGran,
+			mouseover: this.info_update,
+			contextmenu: this.coarserGran
+		});
 		this.on({
 			dblclick: this.expand,
 			click: this.toggleSelect,
@@ -423,7 +446,7 @@ var SelectableProvincia = SelectablePolygon.extend({
 		//Asumes its already choropletized
 		var value = results.value;
 		if(value!=undefined){
-			var color_value = Math.floor(255-((results.value*255)/c_max_val));
+			var color_value = Math.floor(255-((value*255)/p_max_val));
 			this.setStyle({
 				fillColor: 'rgb(225,'+color_value.toString()+',30)',
 				fillOpacity: 0.7,
@@ -454,8 +477,15 @@ var SelectableProvincia = SelectablePolygon.extend({
 		}
 		this.fCollapse();
 	},
+	//mouse event util
 	info_update(){
 		info.update(this);
+	},
+	finerGran(){
+		setGranComuna();
+	},
+	coarserGran(){
+		setGranRegion();
 	}
 });
 
@@ -470,23 +500,23 @@ var SelectableComuna = SelectablePolygon.extend({
 	id: null,
 	choroValue: null,
 	selectedStyle:{
-		fillColor: '#fb9a99',
+		fillColor: com_fill,
 		fillOpacity: 0.8,
-		color: '#e31a1c',
+		color: com_color,
 		weight: 2,
 		dashArray: ''
 	},
 	unselectedStyle:{
-		fillColor: '#fb9a99',
+		fillColor: com_fill,
 		fillOpacity: 0.2,
-		color: '#e31a1c',
+		color: com_color,
 		weight: 2,
 		dashArray: ''
 	},
 	highlightStyle:{
-		fillColor: '#fb9a99',
+		fillColor: com_fill,
 		fillOpacity: 0.8,
-		color: '#e31a1c',
+		color: com_color,
 		weight: 4,
 		dashArray: ''
 	},
@@ -513,11 +543,16 @@ var SelectableComuna = SelectablePolygon.extend({
 			contextmenu: this.contract
 		});
 		this.on({
-			mouseover: this.info_update
+			mouseover: this.info_update,
+			contextmenu: this.coarserGran
 		})
 	},
 	unChoroplethize(){
 		//Asumes its already choropletized
+		this.off({
+			mouseover: this.info_update,
+			contextmenu: this.coarserGran
+		});
 		this.on({
 			click: this.toggleSelect,
 			mouseover: this._highlight,
@@ -533,7 +568,7 @@ var SelectableComuna = SelectablePolygon.extend({
 				fillColor: 'rgb(225,'+color_value.toString()+',30)',
 				fillOpacity: 0.7,
 				color: 'rgb(255,255,255)',
-				weight: 2,
+				weight: 1,
 				dashArray: ''
 			});
 			this.choroValue = value;
@@ -543,7 +578,7 @@ var SelectableComuna = SelectablePolygon.extend({
 				fillColor: 'rgb(200,200,200)',
 				fillOpacity: 0.7,
 				color: 'rgb(255,255,255)',
-				weight: 2,
+				weight: 1,
 				dashArray: ''
 			});
 			this.choroValue = null;
@@ -551,6 +586,9 @@ var SelectableComuna = SelectablePolygon.extend({
 	},
 	info_update(){
 		info.update(this);
+	},
+	coarserGran(){
+		setGranProvincia();
 	}
 });
 
@@ -570,8 +608,6 @@ function expandAll(){
 }
 
 function collapseAll(){
-	for(var region of fe_regiones){
-		if(!region.selected)
-			region.fCollapse();
-	}
+	for(var region of fe_regiones)
+			region.collapse();
 }

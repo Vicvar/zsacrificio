@@ -15,6 +15,9 @@
 	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	<script src="https://unpkg.com/vue-multiselect@2.1.0"></script>
 	<link rel="stylesheet" href="https://unpkg.com/vue-multiselect@2.1.0/dist/vue-multiselect.min.css">
+	<!--ChartJS-->
+	<script src="resources/chartjs/Chart.bundle.js"></script>
+	<!--<link rel="stylesheet" href="resources/chartjs/Chart.css">-->
 	<!--Custom style-->
 	<link rel="stylesheet" type="text/css" href="resources/style.css">
 </head>
@@ -29,20 +32,22 @@
 
 		<div id="side-bar">
 			<div id="global-selector">
-				<div class="selector-button-container">
-					<button type="button" onclick="clearResults()">Ocultar resultados</button>
+				<div class="stay-buttons">
+					<button type="button" onclick="resetSelector()">Volver a la selección</button><br>
+					<button type="button" onclick="aTest()">Buscar</button><br><br><br>
+					Desplegar fuente:<br><br>
+					<button id="seia-display" class="source-selector" type="button" disabled onclick="setSource('seia')">SEIA</button><br>
+					<button id="coes-display" class="source-selector" type="button" disabled onclick="setSource('coes')">COES</button><br>
 				</div>
-				<div class="selector-button-container">					
-					<button type="button" onclick="unChoroplethize()">Volver mapa a selector</button>
-				</div>
-				<div class="selector-button-container">					
-					<button type="button" onclick="aTest()">Buscar</button>
-				</div>
-				<div class="selector-button-container">					
-					<button type="button" onclick="expandAll()">Expandir todo</button>
-				</div>
-				<div class="selector-button-container">					
-					<button type="button" onclick="collapseAll()">Colapsar todo</button>
+
+				<div class="temp-buttons">					
+					<button type="button" onclick="toggleMarkers()">Toggle markers</button><br>
+					<button class="sel-ec" type="button" onclick="expandAll()">Expandir todo(Seleccion)</button><br>
+					<button class="sel-ec" type="button" onclick="collapseAll()">Colapsar todo(Seleccion)</button><br><br>
+					Granularidad de resultados:<br><br>
+					<input class="gran-selector" type="radio" disabled name="granularidad" checked="checked" onclick="setGranRegion()">Región<br>
+					<input class="gran-selector" type="radio" disabled name="granularidad" onclick="setGranProvincia()">Provincia<br>
+					<input class="gran-selector" type="radio" disabled name="granularidad" onclick="setGranComuna()">Comuna<br>
 				</div>
 			</div>
 			<div id="search-tabs">
@@ -202,6 +207,10 @@
 			</div>
 
 			<div id="mapid"></div>
+
+			<div id="time-chart">
+				<canvas id="myChart"></canvas>
+			</div>
 		</div>
 		<script>
 			//Map creation
@@ -247,7 +256,7 @@
 		<script src="resources/multiselectors.js"></script>
 		<script src="resources/queries.js"></script>
 		<script src="resources/results_display.js"></script>
-
+		<script src="resources/timechart.js"></script>
 	</div>
 </body>
 </html>

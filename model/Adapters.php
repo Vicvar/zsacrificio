@@ -131,20 +131,38 @@
 			$eDate = date('Y-m-d H:i:s', $eDate);
 
 
-			$extraValues = $this->processExtraValues($extraKWValues);
+			$accionValues = $this->extraAccionValues($extraKWValues);
+			$tableValues = $this->extraTableValues($extraKWValues);
 			//echo $extraValues;
 
+			//OLD QUERY, NOT WORKING
+			/*
 			$pgqs = "SELECT a.*
 			FROM coes.accion as a".$comT."
 			WHERE a.fecha_inicio BETWEEN '".$sDate."' and '".$eDate."'
 			".$cFilter."
-			".$extraValues.";";
+			".$extraValues.";";*/
+
+			$pgqs = "SELECT json_agg(res)
+				FROM (SELECT a.*,
+				(SELECT json_agg(act1.nombre) from coes.actores_demandados as ados inner join coes.actor as act1 on ados.id_actor=act1.id_actor where ados.id_accion = a.id_accion) as actores_demandados,
+				(SELECT json_agg(act2.nombre) from coes.actores_demandantes as antes inner join coes.actor as act2 on antes.id_actor=act2.id_actor where antes.id_accion = a.id_accion) as actores_demandantes,
+				(SELECT json_agg(cc.nombre) from coes.campos_conflictividad_accion as cca inner join coes.campo_conflictividad as cc on cca.id_campo_conflictividad=cc.id_campo_conflictividad where cca.id_accion = a.id_accion) as campos_conflictividad,
+				(SELECT json_agg(ed.nombre) from coes.elementos_demanda_accion as eda inner join coes.elemento_demanda as ed on eda.id_elemento_demanda=ed.id_elemento_demanda where eda.id_accion = a.id_accion) as elementos_demanda,
+				(SELECT json_agg(gs.nombre) from coes.grupos_accion as ga inner join coes.grupo_social as gs on ga.id_grupo_social=gs.id_grupo_social where ga.id_accion = a.id_accion) as grupos_sociales,
+				(SELECT json_agg(o.nombre) from coes.organizaciones_accion as oa inner join coes.organizacion as o on o.id_organizacion=oa.id_organizacion where oa.id_accion = a.id_accion) as organizaciones,
+				(SELECT json_agg(tp.nombre) from coes.tacticas_protesta_accion as tpa inner join coes.tactica_protesta as tp on tpa.id_tactica_protesta=tp.id_tactica_protesta where tpa.id_accion = a.id_accion) as tacticas_protesta,
+				json_build_object('start',a.fecha_inicio,'end',a.fecha_fin) as time_span,
+				json_build_array(c.id) as comunas
+				FROM public.comunas as c, ".$tableValues." 
+				    
+				WHERE a.fecha_inicio BETWEEN '2012-12-31 00:00:00' and '2016-12-31 00:00:00' ".$accionValues." ".$cFilter." and a.comuna=c.cut::integer and c.valid_until is NULL) as res;";
 
 			//echo "<br><br>".$pgqs;
 
 			$result = pg_query($this->psql_con, $pgqs);
 
-			return pg_fetch_all($result);
+			return pg_fetch_all($result)[0]['json_agg'];
 		}
 
 		private function getComunasFilter($cAlias,$comunas){
@@ -155,22 +173,17 @@
 				foreach ($comunas as $value) {
 					$str .= ", ".$value;
 				}
-				$str .= ") and a.comuna=".$cAlias.".cut::integer";
+				$str .= ")";
 			}
 			return $str;
 		}
 
-		private function processExtraValues($extraValues){
+		private function extraAccionValues($extraValues){
 			$str = "";
 
 			$presencia_carabineros = $extraValues['carabineros'];
 			$fuerzas_disuasivas = $extraValues['fuerzas-disuasivas'];
 			$perjuicios = $extraValues['perjuicios-participantes'];
-			
-			$campos_conflictividad = $extraValues['campos-conflictividad'];
-			$elementos_demanda = array_merge($extraValues['elementos-demanda'],$extraValues['otros-elementos-demanda']);
-			$grupos_sociales = $extraValues['grupos-sociales'];
-			$actores = $extraValues['actores'];
 
 			if(count($presencia_carabineros)==1){
 				$str .=" and a.presencia_carabineros='".$presencia_carabineros[0]."'";
@@ -186,34 +199,66 @@
 					$str .= " and a.".$p."='1'";
 			}
 
-			$str .= $this->filterTableAttributes("campos_conflictividad_accion","cca","id_campo_conflictividad",$campos_conflictividad);
-			$str .= $this->filterTableAttributes("elementos_demanda_accion","eda","id_elemento_demanda",$elementos_demanda);
-			$str .= $this->filterTableAttributes("grupos_accion","gsa","id_grupo_social",$grupos_sociales);
+			return $str;
+		}
 
-			//actor can be in two tables
-			if(count($actores)>0){
-				$str .= " and a.id_accion in";
-				$str .= "(SELECT actacc.id_accion FROM (SELECT * FROM coes.actores_demandantes UNION SELECT * FROM coes.actores_demandados) as actacc ";
-				$str .= "WHERE actacc.id_actor IN (".array_shift($actores);
-				foreach ($actores as $actor) {
-					$str .= ", ".$actor;
-				}
-				$str .= ") GROUP BY actacc.id_accion)";
+		private function extraTableValues($extraValues){
+
+			$str = "(SELECT a1.* 
+				FROM coes.accion as a1
+				WHERE a1.id_accion in (";
+
+			$inters = 0;
+
+			$campos_conflictividad = $extraValues['campos-conflictividad'];
+			$elementos_demanda = array_merge($extraValues['elementos-demanda'],$extraValues['otros-elementos-demanda']);
+			$grupos_sociales = $extraValues['grupos-sociales'];
+			$actores = $extraValues['actores'];
+
+			if(count($campos_conflictividad)==0 && count($elementos_demanda)==0 && count($grupos_sociales)==0 && count($actores)==0)
+				return "coes.accion as a";
+
+			if(count($campos_conflictividad)>0){
+				$str .= $this->filterTableAttributes("campos_conflictividad_accion","cca","id_campo_conflictividad",$campos_conflictividad);
+				$inters = 1;
+			}
+			if(count($elementos_demanda)){
+				if($inters)
+					$str .= " INTERSECT ";
+				else
+					$inters = 1;
+				$str .= $this->filterTableAttributes("elementos_demanda_accion","eda","id_elemento_demanda",$elementos_demanda);
+			}
+			if(count($grupos_sociales)>0){
+				if($inters)
+					$str .= " INTERSECT ";
+				else
+					$inters = 1;
+				$str .= $this->filterTableAttributes("grupos_accion","gsa","id_grupo_social",$grupos_sociales);
+			}
+			if(count($actores)){
+				if($inters)
+					$str .= " INTERSECT ";
+				else
+					$inters = 1;
+				$str .= "(".$this->filterTableAttributes("actores_demandados","ados","id_actor",$actores);
+				$str .= " UNION ";
+				$str .= $this->filterTableAttributes("actores_demandantes","antes","id_actor",$actores).")";
 			}
 
+			$str .= ")) as a";
 			return $str;
 		}
 
 		private function filterTableAttributes($table, $tAlias, $attrName, $valueArr){
 			$r_str = "";
 			if(count($valueArr)>0){
-				$r_str .= " and a.id_accion in";
-				$r_str .= "(SELECT ".$tAlias.".id_accion FROM coes.".$table." as ".$tAlias." ";
+				$r_str .= "(SELECT id_accion FROM coes.".$table." as ".$tAlias." \n";
 				$r_str .= "WHERE ".$tAlias.".".$attrName." IN (".array_shift($valueArr);
 				foreach ($valueArr as $value) {
 					$r_str .= ", ".$value;
 				}
-				$r_str .= ") GROUP BY ".$tAlias.".id_accion)";
+				$r_str .= ")\n GROUP BY ".$tAlias.".id_accion)\n";
 			}
 			return $r_str;
 		}

@@ -79,7 +79,12 @@ for(p in comuna_vect){
 
 //Get all selected areas
 
+//"Flag" for initial granularity
+//0: region, 1: provincia, 2: comuna
+var  granularityFlag;
+
 var getSelected = function(){
+	granularityFlag = 0;
 	var selected_comunas = [];
 	var selected_comunas_ids =[];
 
@@ -96,13 +101,19 @@ var getSelected = function(){
 		else if(fer.provincias!=null){
 			for(var p in fer.provincias){
 				var fep = fer.provincias[p];
-				if(fep.selected)
+				if(fep.selected){
 					selected_comunas = selected_comunas.concat(provincia_to_comunas.get(fep.name));
+					if(granularityFlag<1)
+						granularityFlag = 1;
+				}
 				else if(fep.comunas!=null){
 					for(var c in fep.comunas){
 						var fec = fep.comunas[c];
-						if(fec.selected)
+						if(fec.selected){
 							selected_comunas_ids.push(comuna_to_id.get(fec.name));
+							if(granularityFlag<2)
+								granularityFlag = 2;
+						}
 					}
 				}
 			}
@@ -116,13 +127,11 @@ var getSelected = function(){
 };
 	
 var clearResults = function(){
-	markers.clearLayers();
 	document.getElementById('results').innerHTML='<h3>Resultados</h3>';
 };
 
 //testing AJAX
 
-var markers = new L.layerGroup();
 
 var fuentes = ['seia','coes'];
 
@@ -138,7 +147,7 @@ function requestUrlString(){
 	c = JSON.stringify(getSelected());
 
 	//selected time span
-	time_span = [document.getElementById('f-inicio').value, document.getElementById('f-fin').value];
+	time_span = [document.getElementById('f-inicio').value, document.getElementById('f-fin').value+ ('T23:59:59')];
 	t = JSON.stringify(time_span);
 
 	//selected sources
@@ -197,14 +206,12 @@ function aTest(){
 	var rurl = requestUrlString();
 	if(!rurl)
 		return;
-	
-	markers.clearLayers();
 
 	phttp.onreadystatechange = function(){
 		if (this.readyState == 4 && this.status == 200) {
 			try{
 				var q_results = JSON.parse(this.responseText);
-				displayResults(q_results, markers);
+				displayResults(q_results);
 			}
 			catch(err){
 				console.log(err);

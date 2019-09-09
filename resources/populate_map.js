@@ -53,8 +53,25 @@ info.onAdd = function(mymap){
 
 info.addTo(mymap);
 
-var choroInfo = L.control();
+var choroInfo = L.control({position: 'bottomright'});
+
+choroInfo.onAdd = function(mymap){
+	this._div = L.DomUtil.create('div','info legend');
+	this.update(choropleth_objects[currSource].r_max_val);
+	return this._div;
+}
 
 choroInfo.update = function(max_value){
-	
+	var v1 = max_value/5;
+	var grades = [0,v1,2*v1,3*v1,4*v1,max_value];
+
+	this._div.innerHTML = "Código de colores<br>";
+
+	for (var i = 0; i < grades.length; i++) {
+		this._div.innerHTML +=
+			'<i style="background: rgb(225,' + Math.floor(255-(grades[i]*255)/max_value).toString() + ',30)"></i> ' +
+			Math.floor(grades[i])+'<br>';
+	}
+
+	return this._div;
 }
