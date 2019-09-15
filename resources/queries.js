@@ -13,7 +13,7 @@ noUiSlider.create(dSlider,{
 		max: timestamp('2019')
 	},
 	step: 24 * 60 * 60 * 1000,
-	start:[timestamp('2013'),timestamp('2017')],
+	start:[timestamp('2013'),timestamp('02/01/2013')],
 	connect: true,
 	format: wNumb({
 		decimals:0
@@ -81,10 +81,11 @@ for(p in comuna_vect){
 
 //"Flag" for initial granularity
 //0: region, 1: provincia, 2: comuna
-var  granularityFlag;
+var initChoroGran;
+var timeChartGran;
 
 var getSelected = function(){
-	granularityFlag = 0;
+	initChoroGran = 0;
 	var selected_comunas = [];
 	var selected_comunas_ids =[];
 
@@ -103,16 +104,16 @@ var getSelected = function(){
 				var fep = fer.provincias[p];
 				if(fep.selected){
 					selected_comunas = selected_comunas.concat(provincia_to_comunas.get(fep.name));
-					if(granularityFlag<1)
-						granularityFlag = 1;
+					if(initChoroGran<1)
+						initChoroGran = 1;
 				}
 				else if(fep.comunas!=null){
 					for(var c in fep.comunas){
 						var fec = fep.comunas[c];
 						if(fec.selected){
 							selected_comunas_ids.push(comuna_to_id.get(fec.name));
-							if(granularityFlag<2)
-								granularityFlag = 2;
+							if(initChoroGran<2)
+								initChoroGran = 2;
 						}
 					}
 				}
@@ -148,6 +149,18 @@ function requestUrlString(){
 
 	//selected time span
 	time_span = [document.getElementById('f-inicio').value, document.getElementById('f-fin').value+ ('T23:59:59')];
+	
+	//get time span for granularity
+	var dayDiff = Math.floor((new Date(time_span[1]) - new Date(time_span[0]))/(1000*60*60*24));
+	if(dayDiff < 56)
+		timeChartGran = 0;
+	else if(dayDiff < 365)
+		timeChartGran = 1;
+	else if(dayDiff < 1460)
+		timeChartGran = 2;
+	else
+		timeChartGran = 3;
+
 	t = JSON.stringify(time_span);
 
 	//selected sources

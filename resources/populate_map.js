@@ -18,30 +18,48 @@ for(var i=0; i < n_regiones; i++){
 
 }
 
-var info = L.control();
-
 //Controll to display areas names and contents
+
+var info = L.control({position:'bottomleft'});
 
 var provinciasInRegion = function(props){
 	var res = '';
-	for(p in props.p_data)
-		res+=props.p_data[p]['nombre']+'<br>';
-	return res;
+	var first = true;
+	for(p in props.p_data){
+		if(!first)
+			res+=', '
+		else
+			first = false;
+		res+=firstLetterUpperCase(props.p_data[p]['nombre']);
+	}
+	res2 = res.substring(0,50);
+	if(res.substring(50,51))
+		res2 += '...';
+	return res2;
 };
 
 var comunasInProvinca = function(props){
 	var res = '';
-	for(c in props.c_data)
-		res+=props.c_data[c]['nombre']+'<br>';
-	return res;
+	var first = true;
+	for(c in props.c_data){
+		if(!first)
+			res+=', '
+		else
+			first = false;
+		res+=firstLetterUpperCase(props.c_data[c]['nombre']);
+	}
+	res2 = res.substring(0,50);
+	if(res.substring(50,51))
+		res2 += '...';
+	return res2;
 }
 
 info.update = function(props){
 	this._div.innerHTML = 
-	(props ? '<h3>'+props.name+'</h3>'+
+	(props ? '<h3>'+firstLetterUpperCase(props.name)+'</h3>'+
 	(props.c_data ? '<h4>Comunas</h4>'+comunasInProvinca(props):'')+
 	(props.p_data ? '<h4>Provincias</h4>'+provinciasInRegion(props):'')+
-	(props.choroValue ? '<h4>N° de resultados</h4>'+props.choroValue:'') : 'Información de zona');
+	(props.choroValue ? '<br><br><b>N° de resultados: </b>'+props.choroValue:'') : '<h4>Información de zona</h4>');
 
 };
 
@@ -51,21 +69,23 @@ info.onAdd = function(mymap){
 	return this._div;
 };
 
+//choropleth color legend
+
 info.addTo(mymap);
 
 var choroInfo = L.control({position: 'bottomright'});
 
 choroInfo.onAdd = function(mymap){
 	this._div = L.DomUtil.create('div','info legend');
-	this.update(choropleth_objects[currSource].r_max_val);
+	this.update(choropleth_objects[currSource].r_max_val,"región");
 	return this._div;
 }
 
-choroInfo.update = function(max_value){
+choroInfo.update = function(max_value, currGran){
 	var v1 = max_value/5;
 	var grades = [0,v1,2*v1,3*v1,4*v1,max_value];
 
-	this._div.innerHTML = "Código de colores<br>";
+	this._div.innerHTML = "<h4># "+labels[currSource].toLowerCase()+" <br>por "+currGran+"<br><br></h4>";
 
 	for (var i = 0; i < grades.length; i++) {
 		this._div.innerHTML +=
@@ -74,4 +94,44 @@ choroInfo.update = function(max_value){
 	}
 
 	return this._div;
+}
+
+//Layer selector
+
+//Base maps
+var CartoDB_DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	subdomains: 'abcd',
+	maxZoom: 19
+});
+
+var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
+
+baseMaps ={
+	"Politico": poli,
+	"CartoDB DarkMatter":CartoDB_DarkMatter,
+	"Esri_WorldImagery": Esri_WorldImagery
+} 
+var layerSelector =  L.control.layers(baseMaps);
+
+layerSelector.addTo(mymap);
+
+//UTIL
+function firstLetterUpperCase(string){
+	var splits = string.split(" ");
+	var res = "";
+	var first = true;
+	for(s of splits){
+		if(!first)
+			res += " ";
+		else
+			first = false;
+		if(s!="DE"&&s!="DEL"&&s!="LA"&&s!="LAS"&&s!="LOS"&&s!="Y")
+			res += s[0].toUpperCase() + s.slice(1).toLowerCase();
+		else
+			res += s.toLowerCase();
+	}
+	return res;
 }

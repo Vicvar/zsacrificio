@@ -156,7 +156,7 @@
 				json_build_array(c.id) as comunas
 				FROM public.comunas as c, ".$tableValues." 
 				    
-				WHERE a.fecha_inicio BETWEEN '2012-12-31 00:00:00' and '2016-12-31 00:00:00' ".$accionValues." ".$cFilter." and a.comuna=c.cut::integer and c.valid_until is NULL) as res;";
+				WHERE a.fecha_inicio BETWEEN '".$sDate."' and '".$eDate."' ".$accionValues." ".$cFilter." and a.comuna=c.cut::integer and c.valid_until is NULL) as res;";
 
 			//echo "<br><br>".$pgqs;
 

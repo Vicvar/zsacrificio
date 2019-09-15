@@ -7,6 +7,10 @@
 	<link rel="stylesheet" href="resources/leaflet/leaflet.css">
 	<!--Leaflet map-->
 	<script src="resources/fe_territorio.js"></script>
+	<!--Marker Cluster-->
+	<script src="resources/markerCluster/leaflet.markercluster.js"></script>
+	<link rel="stylesheet" href="resources/markerCluster/MarkerCluster.css">
+	<link rel="stylesheet" href="resources/markerCluster/MarkerCluster.Default.css">
 	<!--Double slider-->
 	<script src="resources/nouislider/nouislider.js"></script>
 	<script src="resources/nouislider/wNumb.js"></script>
@@ -215,12 +219,18 @@
 		<script>
 			//Map creation
 
-			var mymap = L.map('mapid',{doubleClickZoom:false}).setView([-36.830056, -73.036926],6);
-
-			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			var poli = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 				maxZoom: 19,
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-				}).addTo(mymap);
+				});
+
+
+			var mymap = L.map('mapid',{
+				doubleClickZoom:false,
+			}).setView([-36.830056, -73.036926],6);
+
+			mymap.addLayer(poli);
+
 
 			//Getting territorial divisions from inital DB load used in populate_map.js
 

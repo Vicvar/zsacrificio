@@ -1,5 +1,5 @@
-const region_color = '#f7fcb9';
-const region_fill = '#addd8e';
+const region_color = '#31a354';
+const region_fill = '#a1d99b';
 const prov_color = '#8856a7';
 const prov_fill = '#9ebcda';
 const com_color = '#de2d26';
@@ -69,7 +69,13 @@ var SelectablePolygon = L.GeoJSON.extend({
 		else{
 			this.setStyle(this.unselectedStyle);
 		}
-	}
+	},
+	info_update(e){
+		if(e.originalEvent.type=="mouseover")
+			info.update(this);
+		else
+			info.update();
+	},
 });
 
 
@@ -199,6 +205,7 @@ var SelectableRegion = SelectablePolygon.extend({
 		});
 		this.on({
 			dblclick: this.finerGran,
+			mouseout: this.info_update,
 			mouseover: this.info_update
 		});
 	},
@@ -206,6 +213,7 @@ var SelectableRegion = SelectablePolygon.extend({
 		//Asumes its already choropletized
 		this.off({
 			dblclick: this.finerGran,
+			mouseout: this.info_update,
 			mouseover: this.info_update
 		});
 		this.on({
@@ -254,10 +262,7 @@ var SelectableRegion = SelectablePolygon.extend({
 		}
 		this.fCollapse();
 	},
-	//auxialiary functions for events
-	info_update(){
-		info.update(this);
-	},
+	//util
 	finerGran(){
 		setGranProvincia();
 	}
@@ -420,6 +425,7 @@ var SelectableProvincia = SelectablePolygon.extend({
 		this.on({
 			dblclick: this.finerGran,
 			mouseover: this.info_update,
+			mouseout: this.info_update,
 			contextmenu: this.coarserGran
 		})
 	},
@@ -428,6 +434,7 @@ var SelectableProvincia = SelectablePolygon.extend({
 		this.off({
 			dblclick: this.finerGran,
 			mouseover: this.info_update,
+			mouseout: this.info_update,
 			contextmenu: this.coarserGran
 		});
 		this.on({
@@ -477,10 +484,7 @@ var SelectableProvincia = SelectablePolygon.extend({
 		}
 		this.fCollapse();
 	},
-	//mouse event util
-	info_update(){
-		info.update(this);
-	},
+	//util
 	finerGran(){
 		setGranComuna();
 	},
@@ -544,6 +548,7 @@ var SelectableComuna = SelectablePolygon.extend({
 		});
 		this.on({
 			mouseover: this.info_update,
+			mouseout: this.info_update,
 			contextmenu: this.coarserGran
 		})
 	},
@@ -551,6 +556,7 @@ var SelectableComuna = SelectablePolygon.extend({
 		//Asumes its already choropletized
 		this.off({
 			mouseover: this.info_update,
+			mouseout: this.info_update,
 			contextmenu: this.coarserGran
 		});
 		this.on({
@@ -583,9 +589,6 @@ var SelectableComuna = SelectablePolygon.extend({
 			});
 			this.choroValue = null;
 		}
-	},
-	info_update(){
-		info.update(this);
 	},
 	coarserGran(){
 		setGranProvincia();

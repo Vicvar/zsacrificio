@@ -31,6 +31,13 @@ function getTerrHierObj(){
 	return regiones;
 }
 
+function getMonday(date){
+	var day = date.getDay() || 7;
+	if( day !== 1 )
+		date.setHours(-24 * (day - 1));
+	return date;
+}
+
 //console.log('regiones',regiones);
 //console.log('aux_provs',aux_provs);
 //Result variables
@@ -58,8 +65,9 @@ var labels = {
 
 function displayResults(data){
 	//console.log(data);
+	console.log(timeChartGran);
 	for(source in data){
-		var markers = new L.layerGroup();
+		var markers = new L.MarkerClusterGroup();
 		var val_comunas = {};
 		//init selected comunas
 		var selected_comunas = getSelected();
@@ -73,8 +81,19 @@ function displayResults(data){
 		for(sc of selected_comunas)
 			val_comunas[sc] = 0;
 
-		var agg_dates = {};
-		var date_data = [];
+		var agg_dates = {
+			byDay:{},
+			byWeek:{},
+			byMonth:{},
+			byYear:{}
+		};
+
+		var date_data = {
+			byDay:[],
+			byWeek:[],
+			byMonth:[],
+			byYear:[]
+		};
 
 		var c_max_val = 0;
 		if(data[source]==null){
@@ -101,20 +120,50 @@ function displayResults(data){
 			}
 
 			//agregar info en fechas
-			date_t = d.time_span.start;
-			date = date_t.substring(0,10);
-			if(agg_dates[date]==undefined)
-				agg_dates[date]=1;
+			var date_t = d.time_span.start;
+			var date_s = date_t.substring(0,10);
+			var date = new Date(date_t);
+
+			//por día
+			if(agg_dates.byDay[date_s]==undefined)
+				agg_dates.byDay[date_s]=1;
 			else
-				agg_dates[date]++;
+				agg_dates.byDay[date_s]++;
+			
+			//por semana
+			var week_monday = getMonday(date);
+			var week = week_monday.getFullYear().toString()+'-'+(week_monday.getMonth()+1).toString()+'-'+week_monday.getDate().toString();
+
+			if(agg_dates.byWeek[week]==undefined)
+				agg_dates.byWeek[week] = 1;
+			else
+				agg_dates.byWeek[week]++;
+
+			//por mes
+			var month = date.getFullYear().toString()+'-'+(date.getMonth()+1).toString()+'-'+'01';
+			
+			if(agg_dates.byMonth[month]==undefined)
+				agg_dates.byMonth[month] = 1;
+			else
+				agg_dates.byMonth[month]++;
+
+			//por año
+			var year = date.getFullYear().toString()+'-01-01';
+
+			if(agg_dates.byYear[year]==undefined)
+				agg_dates.byYear[year] = 1;
+			else
+				agg_dates.byYear[year]++;
 		}
 
-		for(d in agg_dates){
-			var dat ={
-				t: d,
-				y: agg_dates[d]
+		for(g in agg_dates){
+			for(d in agg_dates[g]){
+				var dat = {
+					t: d,
+					y: agg_dates[g][d]
+				};
+				date_data[g].push(dat);
 			}
-			date_data.push(dat);
 		}
 
 		var r_max_val = 0;
@@ -165,28 +214,45 @@ function displayResults(data){
 		choropleth_objects[source] = choropleth_obj;
 		choropleth_objects[source].markerLayer = markers;
 
-		var timechart_obj = {
-			label: labels[source],
-			data: date_data,
-			backgroundColor: colors[source]+' 0.2)',
-			borderColor: colors[source]+' 0.9)',
-			borderWidth:1
+		var timechart_obj = {};
+
+		for(g in date_data){
+			timechart_obj[g] = {
+				label: labels[source],
+				data: date_data[g],
+				backgroundColor: colors[source]+' 0.2)',
+				borderColor: colors[source]+' 0.9)',
+				borderWidth:1
+			};
 		}
+
 
 		timechart_objects[source] = timechart_obj;
 
 		document.getElementById(source+'-display').disabled = false;
 	}
+	console.log(timechart_objects);
+
 	//last processed in data
 	currSource = source;
-	myChart.data.datasets = [timechart_objects[currSource]];
+
+	if(timeChartGran ==0)
+		setGranDay();
+	else if(timeChartGran == 1)
+		setGranWeek();
+	else if(timeChartGran == 2)
+		setGranMonth();
+	else if(timeChartGran == 3)
+		setGranYear();
 	myChart.update();
+
 	choroplethize(currSource);
-	if(granularityFlag == 1)
+	if(initChoroGran == 1)
 		setGranProvincia();
-	else if(granularityFlag == 2)
+	else if(initChoroGran == 2)
 		setGranComuna();
-	//console.log(timechart_objects);
+	if(choropleth_objects[currSource].markerLayer.getLayers().length>0)
+		layerSelector.addOverlay(choropleth_objects[currSource].markerLayer,"Marcadores");
 }
 
 
@@ -241,10 +307,12 @@ function unChoroplethize(){
 
 //For granularity selection
 
+//Choropleth
+
 function setGranRegion(){
 	for(var reg of fe_regiones)
 		reg.fCollapse();
-	choroInfo.update(choropleth_objects[currSource].r_max_val);
+	choroInfo.update(choropleth_objects[currSource].r_max_val, "región");
 }
 
 function setGranProvincia(){
@@ -252,7 +320,7 @@ function setGranProvincia(){
 		reg.fCollapse();
 	for(var reg of fe_regiones)
 		reg.choroExpand(false);
-	choroInfo.update(choropleth_objects[currSource].p_max_val);
+	choroInfo.update(choropleth_objects[currSource].p_max_val, "provincia");
 }
 
 function setGranComuna(){
@@ -265,10 +333,32 @@ function setGranComuna(){
 			provs[p].choroExpand(false);
 		}
 	}
-	choroInfo.update(choropleth_objects[currSource].c_max_val);
+	choroInfo.update(choropleth_objects[currSource].c_max_val, "comuna");
 }
 
-//markers helper functions
+//TimeChart
+
+function setGranDay(){
+	myChart.data.datasets = [timechart_objects[currSource].byDay];
+	delete myChart.options.time.unit;
+}
+
+function setGranWeek(){
+	myChart.data.datasets = [timechart_objects[currSource].byWeek];
+	myChart.options.time.unit = 'week';
+}
+
+function setGranMonth(){
+	myChart.data.datasets = [timechart_objects[currSource].byMonth];
+	myChart.options.time.unit = 'month';
+}
+
+function setGranYear(){
+	myChart.data.datasets = [timechart_objects[currSource].byYear];
+	myChart.options.time.unit = 'year';
+}
+
+//markers helper functions (deprecated)
 var markers_shown = false;
 
 function toggleMarkers(){
@@ -315,8 +405,19 @@ function setSource(source){
 		return;
 	}
 	else{
-		updateMarkers(source);
-		choroplethize(source);
+		layerSelector.removeLayer(choropleth_objects[currSource].markerLayer);
+		//desseleccionar checkbox doc.getElement... (?)
+
 		currSource = source;
+		//updateMarkers(currSource);
+		if(choropleth_objects[currSource].markerLayer.getLayers().length>0)
+			layerSelector.addOverlay(choropleth_objects[currSource].markerLayer,"Marcadores");
+		choroplethize(currSource);
+		if(initChoroGran == 1)
+			setGranProvincia();
+		else if(initChoroGran == 2)
+			setGranComuna();
+		myChart.data.datasets = [timechart_objects[currSource]];
+		myChart.update();
 	}
 }

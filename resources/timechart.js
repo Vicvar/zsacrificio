@@ -23,6 +23,9 @@ var myChart = new Chart(ctx, {
                 scaleLabel: {
                     display:     false,
                     labelString: '#'
+                },
+                ticks:{
+                    beginAtZero: true
                 }
             }]
         }
