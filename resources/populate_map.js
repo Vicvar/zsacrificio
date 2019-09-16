@@ -1,3 +1,5 @@
+//Needed to have them globally(?)
+
 //Creating SelectablePolygons
 
 //stores region objects
@@ -18,7 +20,7 @@ for(var i=0; i < n_regiones; i++){
 
 }
 
-//Controll to display areas names and contents
+//Control to display areas names and contents
 
 var info = L.control({position:'bottomleft'});
 
@@ -114,9 +116,11 @@ baseMaps ={
 	"CartoDB DarkMatter":CartoDB_DarkMatter,
 	"Esri_WorldImagery": Esri_WorldImagery
 } 
-var layerSelector =  L.control.layers(baseMaps);
+
+var layerSelector =  new CustomControl(baseMaps);
 
 layerSelector.addTo(mymap);
+
 
 //UTIL
 function firstLetterUpperCase(string){

@@ -40,6 +40,7 @@ function getMonday(date){
 
 //console.log('regiones',regiones);
 //console.log('aux_provs',aux_provs);
+
 //Result variables
 
 //choropleth
@@ -62,10 +63,14 @@ var labels = {
 	coes: 'Protestas'
 }
 
+//system state variables
+
+var lastMarkerGroup;
+
 
 function displayResults(data){
 	//console.log(data);
-	console.log(timeChartGran);
+	//console.log(timeChartGran);
 	for(source in data){
 		var markers = new L.MarkerClusterGroup();
 		var val_comunas = {};
@@ -231,28 +236,38 @@ function displayResults(data){
 
 		document.getElementById(source+'-display').disabled = false;
 	}
-	console.log(timechart_objects);
+	//console.log(timechart_objects);
+	//console.log(choropleth_objects);
 
 	//last processed in data
 	currSource = source;
 
-	if(timeChartGran ==0)
-		setGranDay();
-	else if(timeChartGran == 1)
-		setGranWeek();
-	else if(timeChartGran == 2)
-		setGranMonth();
-	else if(timeChartGran == 3)
-		setGranYear();
-	myChart.update();
+	//timeChart
+	setTimechartData(currSource, timeChartGran);
 
+	//Choropleth
 	choroplethize(currSource);
 	if(initChoroGran == 1)
 		setGranProvincia();
 	else if(initChoroGran == 2)
 		setGranComuna();
-	if(choropleth_objects[currSource].markerLayer.getLayers().length>0)
-		layerSelector.addOverlay(choropleth_objects[currSource].markerLayer,"Marcadores");
+
+	if(choropleth_objects[currSource].markerLayer.getLayers().length>0){
+		lastMarkerGroup = choropleth_objects[currSource].markerLayer;
+		layerSelector.addOverlay(lastMarkerGroup,"Marcadores");
+	}
+
+	/*
+	selGran = "<div class=\"leaflet-control-layers-separator\" style=\"\"></div>\
+		<div class =\"leaflet-control-layers-overlay\">\
+			Granularidad de resultados:<br>\
+			<input class=\"gran-selector\" type=\"radio\" disabled name=\"granularidad\" checked=\"checked\" onclick=\"setGranRegion()\">Región<br>\
+			<input class=\"gran-selector\" type=\"radio\" disabled name=\"granularidad\" onclick=\"setGranProvincia()\">Provincia<br>\
+			<input class=\"gran-selector\" type=\"radio\" disabled name=\"granularidad\" onclick=\"setGranComuna()\">Comuna<br>\
+		</div>";	
+
+	layerSelector.getContainer().children[1].innerHTML += selGran;
+	*/
 }
 
 
@@ -264,18 +279,8 @@ function choroplethize(source){
 	collapseAll();
 	for(reg of fe_regiones)
 		reg.choroplethize(results[reg.id],r_max_val,p_max_val,c_max_val);
-	
-	//To be changed
-	var radios = document.getElementsByClassName('gran-selector');
-	var rflag = true;
-	for(var r of radios){
-		if(rflag){
-			r.checked = true;
-			r.disabled = false;
-			rflag = false;
-		}
-		r.disabled = false;
-	}
+
+	layerSelector.toggleGControl();
 
 	var ec = document.getElementsByClassName('sel-ec');
 	for(var b of ec)
@@ -290,10 +295,7 @@ function unChoroplethize(){
 		reg.unChoroplethize();
 	collapseAll();
 
-	//To be changed
-	var radios = document.getElementsByClassName('gran-selector');
-	for(r of radios)
-		r.disabled = true;
+	layerSelector.toggleGControl();
 
 	var ec = document.getElementsByClassName('sel-ec');
 	for(var b of ec)
@@ -309,6 +311,7 @@ function unChoroplethize(){
 
 //Choropleth
 
+//Functions in populate_map.js
 function setGranRegion(){
 	for(var reg of fe_regiones)
 		reg.fCollapse();
@@ -338,23 +341,37 @@ function setGranComuna(){
 
 //TimeChart
 
-function setGranDay(){
-	myChart.data.datasets = [timechart_objects[currSource].byDay];
+function setTimechartData(source, granularity){
+	if(granularity==0)
+		setGranDay(source);
+	else if(granularity==1)
+		setGranWeek(source);
+	else if(granularity==2)
+		setGranMonth(source);
+	else if(granularity==3)
+		setGranYear();
+	else
+		alert('Undefined Timechart granularity');
+	myChart.update();
+}
+
+function setGranDay(source){
+	myChart.data.datasets = [timechart_objects[source].byDay];
 	delete myChart.options.time.unit;
 }
 
-function setGranWeek(){
-	myChart.data.datasets = [timechart_objects[currSource].byWeek];
+function setGranWeek(source){
+	myChart.data.datasets = [timechart_objects[source].byWeek];
 	myChart.options.time.unit = 'week';
 }
 
-function setGranMonth(){
-	myChart.data.datasets = [timechart_objects[currSource].byMonth];
+function setGranMonth(source){
+	myChart.data.datasets = [timechart_objects[source].byMonth];
 	myChart.options.time.unit = 'month';
 }
 
-function setGranYear(){
-	myChart.data.datasets = [timechart_objects[currSource].byYear];
+function setGranYear(source){
+	myChart.data.datasets = [timechart_objects[source].byYear];
 	myChart.options.time.unit = 'year';
 }
 
@@ -386,8 +403,10 @@ function resetSelector(){
 		return;
 	}
 	else{
-		if(markers_shown)
-			toggleMarkers;
+		if(lastMarkerGroup!=undefined){
+			layerSelector.removeLayer(lastMarkerGroup);
+			mymap.removeLayer(lastMarkerGroup);
+		}
 		unChoroplethize();
 	}
 }
@@ -405,19 +424,25 @@ function setSource(source){
 		return;
 	}
 	else{
-		layerSelector.removeLayer(choropleth_objects[currSource].markerLayer);
+		if(lastMarkerGroup!=undefined){
+			layerSelector.removeLayer(lastMarkerGroup);
+			mymap.removeLayer(lastMarkerGroup);
+		}
 		//desseleccionar checkbox doc.getElement... (?)
 
 		currSource = source;
 		//updateMarkers(currSource);
-		if(choropleth_objects[currSource].markerLayer.getLayers().length>0)
-			layerSelector.addOverlay(choropleth_objects[currSource].markerLayer,"Marcadores");
+		if(choropleth_objects[currSource].markerLayer.getLayers().length>0){
+			lastMarkerGroup = choropleth_objects[currSource].markerLayer;
+			layerSelector.addOverlay(lastMarkerGroup,"Marcadores");
+		}
+
+
 		choroplethize(currSource);
 		if(initChoroGran == 1)
 			setGranProvincia();
 		else if(initChoroGran == 2)
 			setGranComuna();
-		myChart.data.datasets = [timechart_objects[currSource]];
-		myChart.update();
+		setTimechartData(currSource, timeChartGran);
 	}
 }

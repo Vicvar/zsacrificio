@@ -41,7 +41,8 @@
 			//print_r($extraValues);
 			//echo "<br>";
 
-			/* OLD QUERY GETS ONLY SELECTED COMUNAS OF PROJECTS
+			/* 
+			//OLD QUERY GETS ONLY SELECTED COMUNAS OF PROJECTS
 			$pgqs = "SELECT json_agg(res)
 			FROM 
 				(SELECT *, json_build_object('start', p.fecha_presentado, 'end', p.fecha_calificado) as time_span
@@ -52,10 +53,21 @@
 					".$cFilter." GROUP BY cp1.id_proyecto) as cp
 				ON p.id_proyecto = cp.id_proyecto 
 				WHERE p.fecha_presentado BETWEEN '".$sDate."' and '".$eDate."'
-				".$extraValues.") as res;";*/
+				".$extraValues.") as res;";
 
+			//OLD QUERY GETS EVERYTHING FROM MAIN TABLE
 			$pgqs = "SELECT json_agg(res)
 			FROM (SELECT p.id_proyecto, p.nombre, p.tipo, p.tipologia, p.titular, p.inversion, p.estado, p.fecha_presentado, p.fecha_calificado, p.sector_productivo, p.latitud, p.longitud, json_build_object('start', p.fecha_presentado, 'end', p.fecha_calificado) as time_span, json_agg(cp.id_comuna) as comunas
+			FROM ".$cFilter." as p
+				INNER JOIN seia.comunas_de_proyecto as cp
+				ON p.id_proyecto = cp.id_proyecto
+			WHERE p.fecha_presentado BETWEEN '".$sDate."' and '".$eDate."' ".$extraValues."
+			GROUP BY p.id_proyecto, p.nombre, p.tipo, p.tipologia, p.titular, p.inversion, p.estado, p.fecha_presentado, p.fecha_calificado, p.sector_productivo, p.latitud, p.longitud) as res;";
+			
+			*/
+
+			$pgqs = "SELECT json_agg(res)
+			FROM (SELECT p.id_proyecto as id, p.nombre as name, json_build_object('start', p.fecha_presentado, 'end', p.fecha_calificado) as time_span, json_agg(cp.id_comuna) as comunas, p.latitud, p.longitud
 			FROM ".$cFilter." as p
 				INNER JOIN seia.comunas_de_proyecto as cp
 				ON p.id_proyecto = cp.id_proyecto
@@ -135,14 +147,15 @@
 			$tableValues = $this->extraTableValues($extraKWValues);
 			//echo $extraValues;
 
-			//OLD QUERY, NOT WORKING
 			/*
+			//OLD QUERY, NOT WORKING
 			$pgqs = "SELECT a.*
 			FROM coes.accion as a".$comT."
 			WHERE a.fecha_inicio BETWEEN '".$sDate."' and '".$eDate."'
 			".$cFilter."
-			".$extraValues.";";*/
-
+			".$extraValues.";";
+			
+			//WORKS TOO SLOWLY, SOULD ONLY FILTER, GET REST OF DATA LATER
 			$pgqs = "SELECT json_agg(res)
 				FROM (SELECT a.*,
 				(SELECT json_agg(act1.nombre) from coes.actores_demandados as ados inner join coes.actor as act1 on ados.id_actor=act1.id_actor where ados.id_accion = a.id_accion) as actores_demandados,
@@ -156,6 +169,26 @@
 				json_build_array(c.id) as comunas
 				FROM public.comunas as c, ".$tableValues." 
 				    
+				WHERE a.fecha_inicio BETWEEN '".$sDate."' and '".$eDate."' ".$accionValues." ".$cFilter." and a.comuna=c.cut::integer and c.valid_until is NULL) as res;";
+
+			*/
+
+			$pgqs = "SELECT json_agg(res)
+				FROM (SELECT a.id_accion as id,
+					((SELECT m.nombre 
+					FROM coes.medio as m WHERE a.id_medio = m.id_medio)||' '||
+					COALESCE(a.numero_participantes::text, 
+						CASE WHEN a.numero_participantes_estimado='1' THEN '<10'
+							WHEN a.numero_participantes_estimado='2' THEN '10-49'
+							WHEN a.numero_participantes_estimado='3' THEN '50-100'
+							WHEN a.numero_participantes_estimado='4' THEN 'cientos de'
+							WHEN a.numero_participantes_estimado='5' THEN 'miles de'
+							WHEN a.numero_participantes_estimado='6' THEN 'decenas de miles de'
+							ELSE 'numero indeterminado de'
+							END)||' participantes en '||COALESCE(a.localidad,'localidad indeterminada')) as name,
+				json_build_object('start',a.fecha_inicio,'end',a.fecha_fin) as time_span,
+				json_build_array(c.id) as comunas
+				FROM public.comunas as c, ".$tableValues."
 				WHERE a.fecha_inicio BETWEEN '".$sDate."' and '".$eDate."' ".$accionValues." ".$cFilter." and a.comuna=c.cut::integer and c.valid_until is NULL) as res;";
 
 			//echo "<br><br>".$pgqs;

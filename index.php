@@ -48,10 +48,6 @@
 					<button type="button" onclick="toggleMarkers()">Toggle markers</button><br>
 					<button class="sel-ec" type="button" onclick="expandAll()">Expandir todo(Seleccion)</button><br>
 					<button class="sel-ec" type="button" onclick="collapseAll()">Colapsar todo(Seleccion)</button><br><br>
-					Granularidad de resultados:<br><br>
-					<input class="gran-selector" type="radio" disabled name="granularidad" checked="checked" onclick="setGranRegion()">Región<br>
-					<input class="gran-selector" type="radio" disabled name="granularidad" onclick="setGranProvincia()">Provincia<br>
-					<input class="gran-selector" type="radio" disabled name="granularidad" onclick="setGranComuna()">Comuna<br>
 				</div>
 			</div>
 			<div id="search-tabs">
