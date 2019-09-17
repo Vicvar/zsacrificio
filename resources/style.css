@@ -14,8 +14,8 @@
 #global-selector{
 	overflow: hidden;
 	position: relative;
-	height: 50vh;
-	min-height: 240px;
+	height: 15vh;
+	min-height: 125px;
 	display: grid;
 	grid-template-columns: 50% auto;
 	background-color: beige;
@@ -47,14 +47,14 @@
 	scrollbar-color: auto;
 }
 
-#search-tabs{
+.nested{
 	position: relative;
 	background-color: darkgrey;
 	padding: 7px;
 	overflow: hidden;
 }
 
-#search{
+.tab-container{
 	background-color: lightgrey;
 	padding:10px;
 	overflow: hidden;
@@ -158,14 +158,14 @@
 	background-color: lightgrey;
 }
 
-.search-form{
+.tab-content{
 	display: none;
 	padding: 6px 12px;
 	border: 1px solid lightgrey;
 	border-top: none;
 }
 
-.search-form.active{
+.tab-content.active{
 	display: block;
 	padding: 6px 12px;
 	border: 1px solid lightgrey;

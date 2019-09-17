@@ -61,7 +61,7 @@ info.update = function(props){
 	(props ? '<h3>'+firstLetterUpperCase(props.name)+'</h3>'+
 	(props.c_data ? '<h4>Comunas</h4>'+comunasInProvinca(props):'')+
 	(props.p_data ? '<h4>Provincias</h4>'+provinciasInRegion(props):'')+
-	(props.choroValue ? '<br><br><b>N° de resultados: </b>'+props.choroValue:'') : '<h4>Información de zona</h4>');
+	(props.choroValue ? '<br><b>N° de resultados: </b>'+props.choroValue:'') : '<h4>Información de zona</h4>');
 
 };
 
@@ -99,6 +99,76 @@ choroInfo.update = function(max_value, currGran){
 }
 
 //Layer selector
+
+//control para mapa
+
+var CustomControl = L.Control.Layers.extend({
+	onAdd: function () {
+		this._initLayout();
+		this._addGranControl();
+		this._update();
+		return this._container;
+	},
+	_addGranControl() {
+		var elements = this._container.getElementsByClassName('leaflet-control-layers-list');
+		var granControl = L.DomUtil.create('div','gran-control',elements[0]);
+		var separator = L.DomUtil.create('div','leaflet-control-layers-separator',granControl);
+
+		granControl.id = 'cg-control';
+		granControl.innerHTML += 'Granularidad resultados<br>';
+
+		var rLabel = L.DomUtil.create('label','gs-label',granControl);
+		var pLabel = L.DomUtil.create('label','gs-label',granControl);
+		var cLabel = L.DomUtil.create('label','gs-label',granControl);
+
+		var granR = L.DomUtil.create('input','gran-selector',rLabel);
+		var granP = L.DomUtil.create('input','gran-selector',pLabel);
+		var granC = L.DomUtil.create('input','gran-selector',cLabel);
+
+		var rText = L.DomUtil.create('span','',rLabel);
+		var pText = L.DomUtil.create('span','',pLabel);
+		var cText = L.DomUtil.create('span','',cLabel);
+
+		rText.innerHTML = 'Región';
+		pText.innerHTML = 'Provincia';
+		cText.innerHTML = 'Comuna';
+
+		granR.name = 'choroGran';
+		granR.type = 'radio';
+		granP.name = 'choroGran';
+		granP.type = 'radio';
+		granC.name = 'choroGran';
+		granC.type = 'radio';
+
+		L.DomEvent.on(granR,'click',this._setGranR,this);
+		L.DomEvent.on(granP,'click',this._setGranP,this);
+		L.DomEvent.on(granC,'click',this._setGranC,this);
+
+		granControl.hidden = true;
+	},
+	showGControl(){
+		this._container.getElementsByClassName('gran-control')[0].hidden = false;
+	},
+	hideGControl(){
+		this._container.getElementsByClassName('gran-control')[0].hidden = true;
+	},
+	toggleGControl(){
+		gcont = this._container.getElementsByClassName('gran-control')[0];
+		if(gcont.hidden)
+			gcont.hidden=false;
+		else
+			gcont.hidden=true;
+	},
+	_setGranR(){
+		setGranRegion();
+	},
+	_setGranP(){
+		setGranProvincia();
+	},
+	_setGranC(){
+		setGranComuna();
+	}
+});
 
 //Base maps
 var CartoDB_DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
