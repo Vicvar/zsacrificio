@@ -98,6 +98,12 @@
     color: #777;
 }
 
+.gran-control button{
+	display: block;
+	padding: 3px;
+	width: 100%;
+}
+
 /*TIME SELECTOR*/
 #date-range{
 	position: relative;

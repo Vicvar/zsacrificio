@@ -117,6 +117,16 @@ var CustomControl = L.Control.Layers.extend({
 		granControl.id = 'cg-control';
 		granControl.innerHTML += 'Granularidad resultados<br>';
 
+		var granR = L.DomUtil.create('button','gran-selector', granControl);
+		granR.innerText = "Región";
+		var granP = L.DomUtil.create('button','gran-selector', granControl);
+		granP.innerText = "Provincia";
+		var granC = L.DomUtil.create('button','gran-selector', granControl);
+		granC.innerText = "Comuna";
+
+
+		//OLD. Using radio buttons
+		/* 
 		var rLabel = L.DomUtil.create('label','gs-label',granControl);
 		var pLabel = L.DomUtil.create('label','gs-label',granControl);
 		var cLabel = L.DomUtil.create('label','gs-label',granControl);
@@ -139,6 +149,7 @@ var CustomControl = L.Control.Layers.extend({
 		granP.type = 'radio';
 		granC.name = 'choroGran';
 		granC.type = 'radio';
+		*/
 
 		L.DomEvent.on(granR,'click',this._setGranR,this);
 		L.DomEvent.on(granP,'click',this._setGranP,this);
