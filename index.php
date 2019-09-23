@@ -37,25 +37,11 @@
 		?>
 
 		<div id="side-bar">
-			<div id="global-selector">
-				<div class="stay-buttons">
-					<button type="button" onclick="resetSelector()">Volver a la selección</button><br>
-					<button type="button" onclick="aTest()">Buscar</button><br><br><br>
-				</div>
-
-				<div class="temp-buttons">
-					<button id="seia-display" class="source-selector" type="button" disabled onclick="setSource('seia')">SEIA</button><br>
-					<button id="coes-display" class="source-selector" type="button" disabled onclick="setSource('coes')">COES</button><br>
-					<!--
-					<button type="button" onclick="toggleMarkers()">Toggle markers</button><br>
-					<button class="sel-ec" type="button" onclick="expandAll()">Expandir todo(Seleccion)</button><br>
-					<button class="sel-ec" type="button" onclick="collapseAll()">Colapsar todo(Seleccion)</button><br><br>
-					-->
-				</div>
-			</div>
 			<div class="tabs">
-				<button class="tab-button active" onclick="tabHandler(this,'search-tabs')">Búsqueda</button>
-				<button id="results-tab-button" class="tab-button" onclick="tabHandler(this,'result-tabs')">Resultados</button>
+				<button id="search-tab-button" class="tab-button active" onclick="tabHandler(this,'search-tabs')">Búsqueda</button>
+				<button disabled id="results-tab-button" class="tab-button" disabled onclick="tabHandler(this,'result-tabs')">Resultados</button>
+				<button hidden type="button" id="back-to-sel" class="control-button" onclick="resetSelector()">Volver a la selección</button>
+				<button type="button" id="search-button" class="control-button" onclick="search()">Buscar</button>
 			</div>
 			<div>
 				<div id="search-tabs" class="tab-content nested active">
@@ -196,19 +182,52 @@
 				</div>
 				<div id="result-tabs" class="tab-content nested">
 					<div class="tabs">
-						<button class="tab-button active" onclick="tabHandler(this,'seia-results')">SEIA</button>
-						<button class="tab-button" onclick="tabHandler(this,'coes-results')">COES</button>
-						<button class="tab-button" onclick="tabHandler(this,'lobby-results')">Lobby</button>
+						<button disabled id="seia-resTabButton" class="tab-button result-tab" onclick="resultsTabHandler(this,'seia-results')">SEIA</button>
+						<button disabled id="coes-resTabButton" class="tab-button result-tab" onclick="resultsTabHandler(this,'coes-results')">COES</button>
+						<button disabled id="lobby-resTabButton" class="tab-button result-tab" onclick="resultsTabHandler(this,'lobby-results')">Lobby</button>
 					</div>
 					<div class="tab-container">
-						<div id="seia-results" class="tab-content active">
-							<table id="seia-table"></table>
+						<div id="seia-results" class="tab-content result-content">
+							<div id="seia-table-div">
+								<table  id="seia-table" class="resultTable">
+									<colgroup>
+										<col class="name-col" >
+										<col span="2" class="date-col">
+									</colgroup>
+								</table>
+							</div>
+							<div hidden="true" id="seia-details-div">
+								<button type="button" class="back-button" onclick="backToResults('seia')">&larr;</button>
+								<table  id="seia-details"></table>
+							</div>
 						</div>
-						<div id="coes-results" class="tab-content">
-							<table id="coes-table"></table>
+						<div id="coes-results" class="tab-content result-content">
+							<div id="coes-table-div">
+								<table id="coes-table" class="resultTable">
+									<colgroup>
+										<col class="name-col" >
+										<col span="2" class="date-col">
+									</colgroup>
+								</table>
+							</div>
+							<div hidden="true" id="coes-details-div">
+								<button type="button" class="back-button" onclick="backToResults('coes')">&larr;</button>
+								<table id="coes-details"></table>
+							</div>
 						</div>
-						<div id="lobby-results" class="tab-content">
-							<table id="lobby-table"></table>
+						<div id="lobby-results" class="tab-content result-content">
+							<div id="lobby-table-div">
+								<table id="lobby-table" class="resultTable">
+									<colgroup>
+										<col class="name-col" >
+										<col span="2" class="date-col">
+									</colgroup>
+								</table>
+							</div>
+							<div hidden="true" id="lobby-details-div">
+								<button type="button" class="back-button" onclick="backToResults('lobby')">&larr;</button>
+								<table id="lobby-details"></table>
+							</div>
 						</div>
 					</div>
 					<h3>Resultados</h3>
@@ -220,21 +239,24 @@
 
 		<div id="selection">
 			<div id="selector">
-				<div id="date-range">
+
+				<div onclick="this.hidden=true;" id="date-range" style="background-color: orange">
 					<div id="nouislider"></div>
-					<div id="input-f">
-						<div id="fechas">
-							<input type="date" id="f-inicio" name="f-inicio">
-							<div>
-								<label><input type="radio" name="date-gran" onclick = "setGranDay()">Día</label>
-								<label><input type="radio" name="date-gran" onclick = "setGranWeek()">Semana</label>
-								<label><input type="radio" name="date-gran" onclick = "setGranMonth()">Mes</label>
-								<label><input type="radio" name="date-gran" onclick = "setGranYear()">Año</label>
-							</div>
-							<input type="date" id="f-fin" name="f-fin">
-						</div>
-					</div>	
 				</div>
+
+				<div id="input-f">
+					<div id="fechas">
+						<input type="date" id="f-inicio" name="f-inicio">
+						<div>
+							<label><input type="radio" name="date-gran" onclick = "setGranDay()">Día</label>
+							<label><input type="radio" name="date-gran" onclick = "setGranWeek()">Semana</label>
+							<label><input type="radio" name="date-gran" onclick = "setGranMonth()">Mes</label>
+							<label><input type="radio" name="date-gran" onclick = "setGranYear()">Año</label>
+						</div>
+						<input type="date" id="f-fin" name="f-fin">
+					</div>
+				</div>
+				
 			</div>
 
 			<div id="mapid"></div>
@@ -242,6 +264,7 @@
 			<div id="time-chart">
 				<canvas id="myChart"></canvas>
 			</div>
+
 		</div>
 		<script>
 			//Map creation

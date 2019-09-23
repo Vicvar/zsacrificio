@@ -72,6 +72,17 @@ var lastMarkerGroup;
 function displayResults(data){
 	//console.log(data);
 	//console.log(timeChartGran);
+
+	//Reseting global result variables
+	//choropleth
+	choropleth_objects = {};
+	currSource = null;
+	choroplethized = false;
+	//timechart
+	timechart_objects = {};
+	lastMarkerGroup = null;
+	var firstSource = true;
+
 	for(source in data){
 		var markers = new L.MarkerClusterGroup();
 		var val_comunas = {};
@@ -235,29 +246,36 @@ function displayResults(data){
 
 		timechart_objects[source] = timechart_obj;
 
-		document.getElementById(source+'-display').disabled = false;
+		document.getElementById(source+'-resTabButton').disabled = false;
+
+		if(firstSource){
+			document.getElementById(source+'-resTabButton').className += " active";
+			document.getElementById(source+'-results').className += " active";
+			firstSource=false;
+			//console.log(timechart_objects);
+			//console.log(choropleth_objects);
+
+			//last processed in data
+			currSource = source;
+
+			//timeChart
+			setTimechartData(currSource, timeChartGran);
+
+			//Choropleth
+			choroplethize(currSource);
+			if(initChoroGran == 1)
+				setGranProvincia();
+			else if(initChoroGran == 2)
+				setGranComuna();
+
+			if(choropleth_objects[currSource].markerLayer.getLayers().length>0){
+				lastMarkerGroup = choropleth_objects[currSource].markerLayer;
+				layerSelector.addOverlay(lastMarkerGroup,"Marcadores");
+			}
+		}
+
 	}
 	setTables(data);
-	//console.log(timechart_objects);
-	//console.log(choropleth_objects);
-
-	//last processed in data
-	currSource = source;
-
-	//timeChart
-	setTimechartData(currSource, timeChartGran);
-
-	//Choropleth
-	choroplethize(currSource);
-	if(initChoroGran == 1)
-		setGranProvincia();
-	else if(initChoroGran == 2)
-		setGranComuna();
-
-	if(choropleth_objects[currSource].markerLayer.getLayers().length>0){
-		lastMarkerGroup = choropleth_objects[currSource].markerLayer;
-		layerSelector.addOverlay(lastMarkerGroup,"Marcadores");
-	}
 }
 
 
@@ -344,49 +362,28 @@ function setTimechartData(source, granularity){
 		alert('Undefined Timechart granularity');
 }
 
-function setGranDay(source = currSource){
+function setGranDay(source){
 	myChart.data.datasets = [timechart_objects[source].byDay];
 	delete myChart.options.time.unit;
 	myChart.update();
 }
 
-function setGranWeek(source = currSource){
+function setGranWeek(source){
 	myChart.data.datasets = [timechart_objects[source].byWeek];
 	myChart.options.time.unit = 'week';
 	myChart.update();
 }
 
-function setGranMonth(source = currSource){
+function setGranMonth(source){
 	myChart.data.datasets = [timechart_objects[source].byMonth];
 	myChart.options.time.unit = 'month';
 	myChart.update();
 }
 
-function setGranYear(source = currSource){
+function setGranYear(source){
 	myChart.data.datasets = [timechart_objects[source].byYear];
 	myChart.options.time.unit = 'year';
 	myChart.update();
-}
-
-//markers helper functions (deprecated)
-var markers_shown = false;
-
-function toggleMarkers(){
-	if(markers_shown){
-		mymap.removeLayer(choropleth_objects[currSource].markerLayer);
-		markers_shown = false;
-	}
-	else{
-		choropleth_objects[currSource].markerLayer.addTo(mymap);
-		markers_shown = true;
-	}
-}
-
-function updateMarkers(source){
-	if(markers_shown){
-		mymap.removeLayer(choropleth_objects[currSource].markerLayer);
-		choropleth_objects[source].markerLayer.addTo(mymap);
-	}
 }
 
 //Go back to selection
@@ -401,6 +398,23 @@ function resetSelector(){
 			mymap.removeLayer(lastMarkerGroup);
 		}
 		unChoroplethize();
+		var source_res_tabs = document.getElementsByClassName('result-tab');
+		for(var srt of source_res_tabs){
+			srt.disabled = true;
+			srt.className = srt.className.replace(" active","");
+		}
+		var source_res = document.getElementsByClassName('result-content');
+		for(var sr of source_res){
+			sr.className = sr.className.replace(" active","");
+		}
+		var res_tab = document.getElementById('results-tab-button');
+		var stb = document.getElementById('search-tab-button');
+		var bts = document.getElementById('back-to-sel');
+		var search_but = document.getElementById('search-button');
+		res_tab.disabled = true;
+		bts.hidden = true;
+		search_but.hidden = false;
+		tabHandler(stb,'search-tabs');
 	}
 }
 
@@ -440,4 +454,50 @@ function setSource(source){
 			setGranComuna();
 		setTimechartData(currSource, timeChartGran);
 	}
+}
+
+//Handler for detail displaying from the results table
+function displayDetails(details, source){
+	//console.log(details,source);
+	//Hide results div
+	var results = document.getElementById(source+"-table-div");
+	results.hidden = true;
+	//Create details table
+	var d_table = document.getElementById(source+"-details");
+	d_table.innerHTML += "<tbody></tbody>";
+	var d_table_body = d_table.firstElementChild;
+	for(var data in details[0]){
+		d_table_body.innerHTML += "<tr><td>"+usToFLUC(data.toString())+"</td><td>"+(details[0][data]?details[0][data].toString():"-")+"</td></tr>";
+	}
+	//show details div
+	var details = document.getElementById(source+"-details-div");
+	details.hidden = false;
+}
+
+function usToFLUC(str){
+	var splits = str.split("_");
+	var res = "";
+	var first = true;
+	for(s of splits){
+		if(!first){
+			res += " ";
+			res += s.toLowerCase();
+		}
+		else{
+			first = false;
+			res += s[0].toUpperCase() + s.slice(1).toLowerCase();
+		}
+	}
+	return res;
+}
+
+//"back" button handler
+function backToResults(source){
+	var details = document.getElementById(source+"-details-div");
+	var d_table = document.getElementById(source+"-details");
+	var results = document.getElementById(source+"-table-div");
+
+	d_table.innerHTML = "";
+	details.hidden = true;
+	results.hidden = false;
 }

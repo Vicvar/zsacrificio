@@ -210,7 +210,7 @@ function requestUrlString(){
 	return base_url+"?c="+c+"&t="+t+"&s="+s+"&ekw="+ekw;
 }
 
-function aTest(){
+function search(){
 
 	if(!validateForms)
 		return;
@@ -221,7 +221,7 @@ function aTest(){
 		return;
 
 	phttp.onreadystatechange = function(){
-		if (this.readyState == 4 && this.status == 200) {
+		if (this.readyState == 4 && this.status == 200){
 			try{
 				var q_results = JSON.parse(this.responseText);
 				displayResults(q_results);
@@ -234,7 +234,15 @@ function aTest(){
 			//console.log('Empty responseText');
 		}
 	};
-	console.log(rurl);
+	//console.log(rurl);
 	phttp.open("GET",rurl,true);
 	phttp.send();
+
+	var res_tab = document.getElementById('results-tab-button');
+	var bts = document.getElementById('back-to-sel');
+	var search_but = document.getElementById('search-button');
+	res_tab.disabled = false;
+	bts.hidden = false;
+	search_but.hidden = true;
+	tabHandler(res_tab,'result-tabs');
 }

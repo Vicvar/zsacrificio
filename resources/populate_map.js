@@ -124,33 +124,6 @@ var CustomControl = L.Control.Layers.extend({
 		var granC = L.DomUtil.create('button','gran-selector', granControl);
 		granC.innerText = "Comuna";
 
-
-		//OLD. Using radio buttons
-		/* 
-		var rLabel = L.DomUtil.create('label','gs-label',granControl);
-		var pLabel = L.DomUtil.create('label','gs-label',granControl);
-		var cLabel = L.DomUtil.create('label','gs-label',granControl);
-
-		var granR = L.DomUtil.create('input','gran-selector',rLabel);
-		var granP = L.DomUtil.create('input','gran-selector',pLabel);
-		var granC = L.DomUtil.create('input','gran-selector',cLabel);
-
-		var rText = L.DomUtil.create('span','',rLabel);
-		var pText = L.DomUtil.create('span','',pLabel);
-		var cText = L.DomUtil.create('span','',cLabel);
-
-		rText.innerHTML = 'Región';
-		pText.innerHTML = 'Provincia';
-		cText.innerHTML = 'Comuna';
-
-		granR.name = 'choroGran';
-		granR.type = 'radio';
-		granP.name = 'choroGran';
-		granP.type = 'radio';
-		granC.name = 'choroGran';
-		granC.type = 'radio';
-		*/
-
 		L.DomEvent.on(granR,'click',this._setGranR,this);
 		L.DomEvent.on(granP,'click',this._setGranP,this);
 		L.DomEvent.on(granC,'click',this._setGranC,this);
