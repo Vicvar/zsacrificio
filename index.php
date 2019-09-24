@@ -44,8 +44,8 @@
 				<button type="button" id="search-button" class="control-button" onclick="search()">Buscar</button>
 			</div>
 			<div>
-				<div id="search-tabs" class="tab-content nested active">
-					<div class="tabs">
+				<div id="search-tabs" class="tab-content outer active">
+					<div class="tabs inner">
 						<button class="tab-button active" onclick="tabHandler(this,'seia')">SEIA</button>
 						<button class="tab-button" onclick="tabHandler(this,'coes')">COES</button>
 						<button class="tab-button" onclick="tabHandler(this,'lobby')">Lobby</button>
@@ -167,21 +167,18 @@
 									<button onclick="perjuicios_participantes.resetValues()">Borrar Filtro</button>
 								</div>
 							</div>
-
-
-
 						</div>
 						<div id="lobby" class="tab-content">
 							<h4>Datos Ley de lobby</h4>
 							<br>
-							<label><input class="source-cb" type="checkbox" > Usar fuente </lalbel>
+							<label><input class="source-cb" type="checkbox" > Usar fuente </label>
 							<br><br>
 							<hr>
 						</div>
 					</div>
 				</div>
-				<div id="result-tabs" class="tab-content nested">
-					<div class="tabs">
+				<div id="result-tabs" class="tab-content outer">
+					<div class="tabs inner">
 						<button disabled id="seia-resTabButton" class="tab-button result-tab" onclick="resultsTabHandler(this,'seia-results')">SEIA</button>
 						<button disabled id="coes-resTabButton" class="tab-button result-tab" onclick="resultsTabHandler(this,'coes-results')">COES</button>
 						<button disabled id="lobby-resTabButton" class="tab-button result-tab" onclick="resultsTabHandler(this,'lobby-results')">Lobby</button>
@@ -239,31 +236,27 @@
 
 		<div id="selection">
 			<div id="selector">
-
-				<div onclick="this.hidden=true;" id="date-range" style="background-color: orange">
-					<div id="nouislider"></div>
-				</div>
-
 				<div id="input-f">
-					<div id="fechas">
-						<input type="date" id="f-inicio" name="f-inicio">
-						<div>
-							<label><input type="radio" name="date-gran" onclick = "setGranDay()">Día</label>
-							<label><input type="radio" name="date-gran" onclick = "setGranWeek()">Semana</label>
-							<label><input type="radio" name="date-gran" onclick = "setGranMonth()">Mes</label>
-							<label><input type="radio" name="date-gran" onclick = "setGranYear()">Año</label>
+					<div id ="dates">
+						<label id="inicio">Desde: <input type="date" id="f-inicio" name="f-inicio"></label>
+						<label id="fin">Hasta: <input type="date" id="f-fin" name="f-fin"></label>
+						<div hidden id="date-gran-cont">
+							Granulaidad:
+							<button type="button" class="date-gran" onclick = "setGranDay()">Día</button>/<button type="button" class="date-gran" onclick = "setGranWeek()">Sem</button>/<button type="button" class="date-gran" onclick = "setGranMonth()">Mes</button>/<button type="button" class="date-gran" onclick = "setGranYear()">Año</button>
 						</div>
-						<input type="date" id="f-fin" name="f-fin">
 					</div>
 				</div>
-				
+
+				<div id="date-range">
+					<div id="nouislider"></div>
+				</div>
+			</div>
+
+			<div hidden id="time-chart">
+				<canvas id="myChart"></canvas>
 			</div>
 
 			<div id="mapid"></div>
-
-			<div id="time-chart">
-				<canvas id="myChart"></canvas>
-			</div>
 
 		</div>
 		<script>
@@ -309,6 +302,8 @@
 
 			var medios = <?php echo json_encode($medio) ?>;
 
+			//making sure results is disabled
+			document.getElementById('results-tab-button').disabled=true;
 
 		</script>
 		<script src="resources/populate_map.js"></script>

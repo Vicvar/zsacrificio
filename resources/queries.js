@@ -13,12 +13,25 @@ noUiSlider.create(dSlider,{
 		max: timestamp('2019')
 	},
 	step: 24 * 60 * 60 * 1000,
-	start:[timestamp('2013'),timestamp('02/01/2013')],
+	start:[timestamp('2010'),timestamp('2012')],
 	connect: true,
 	format: wNumb({
 		decimals:0
-	})
+	}),
+	pips:{
+		mode:'count',
+		format:{
+			to: toDate,
+			from: Number
+		},
+		values:14,
+		density:4
+	}
 });
+
+function toDate(value){
+	return new Date(value).getFullYear();
+}
 
 dSlider.noUiSlider.on('update', function (values, handle) {
 	var date = new Date(+values[handle]);
@@ -225,6 +238,19 @@ function search(){
 			try{
 				var q_results = JSON.parse(this.responseText);
 				displayResults(q_results);
+				//Hide, enable/disable and click buttons
+				var res_tab = document.getElementById('results-tab-button');
+				var bts = document.getElementById('back-to-sel');
+				var search_but = document.getElementById('search-button');
+				var gran_temp = document.getElementById('date-gran-cont');
+				res_tab.disabled = false;
+				bts.hidden = false;
+				search_but.hidden = true;
+				gran_temp.hidden = false;
+				tabHandler(res_tab,'result-tabs');
+				//Hide time range and show date table
+				document.getElementById('date-range').hidden = true;
+				document.getElementById('time-chart').hidden = false;
 			}
 			catch(err){
 				console.log(err);
@@ -237,12 +263,4 @@ function search(){
 	//console.log(rurl);
 	phttp.open("GET",rurl,true);
 	phttp.send();
-
-	var res_tab = document.getElementById('results-tab-button');
-	var bts = document.getElementById('back-to-sel');
-	var search_but = document.getElementById('search-button');
-	res_tab.disabled = false;
-	bts.hidden = false;
-	search_but.hidden = true;
-	tabHandler(res_tab,'result-tabs');
 }

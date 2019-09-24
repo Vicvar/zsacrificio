@@ -114,7 +114,7 @@ function displayResults(data){
 
 		var c_max_val = 0;
 		if(data[source]==null){
-			alert('No se obtuvieron resultados para la fuente ',source);
+			alert('No se obtuvieron resultados para la fuente:'+source);
 			continue;
 		}
 
@@ -237,8 +237,8 @@ function displayResults(data){
 			timechart_obj[g] = {
 				label: labels[source],
 				data: date_data[g],
-				backgroundColor: colors[source]+' 0.2)',
-				borderColor: colors[source]+' 0.9)',
+				backgroundColor: colors[source]+' 1)',
+				borderColor: colors[source]+' 1)',
 				borderWidth:1
 			};
 		}
@@ -362,25 +362,25 @@ function setTimechartData(source, granularity){
 		alert('Undefined Timechart granularity');
 }
 
-function setGranDay(source){
+function setGranDay(source = currSource){
 	myChart.data.datasets = [timechart_objects[source].byDay];
 	delete myChart.options.time.unit;
 	myChart.update();
 }
 
-function setGranWeek(source){
+function setGranWeek(source = currSource){
 	myChart.data.datasets = [timechart_objects[source].byWeek];
 	myChart.options.time.unit = 'week';
 	myChart.update();
 }
 
-function setGranMonth(source){
+function setGranMonth(source = currSource){
 	myChart.data.datasets = [timechart_objects[source].byMonth];
 	myChart.options.time.unit = 'month';
 	myChart.update();
 }
 
-function setGranYear(source){
+function setGranYear(source = currSource){
 	myChart.data.datasets = [timechart_objects[source].byYear];
 	myChart.options.time.unit = 'year';
 	myChart.update();
@@ -411,10 +411,17 @@ function resetSelector(){
 		var stb = document.getElementById('search-tab-button');
 		var bts = document.getElementById('back-to-sel');
 		var search_but = document.getElementById('search-button');
+		var gran_temp = document.getElementById('date-gran-cont');
+
 		res_tab.disabled = true;
 		bts.hidden = true;
 		search_but.hidden = false;
+		gran_temp.hidden = true;
 		tabHandler(stb,'search-tabs');
+
+		document.getElementById('date-range').hidden = false;
+		document.getElementById('time-chart').hidden = true;
+
 	}
 }
 

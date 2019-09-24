@@ -9,15 +9,22 @@ var myChart = new Chart(ctx, {
         maintainAspectRatio: false,
         time:{
             parser:'YYYY-MM-DD',
-            tooltipFormat: 'll'
+            tooltipFormat: 'll',
+            displayFormats:{
+                day: 'DD MM YYY',
+                week: 'll',
+                month: 'MMM YYYY',
+                year:'YYYY'
+            }
         },
         scales:{
             xAxes: [{
-                type:       "time",
+                type:"time",
                 scaleLabel: {
                     display:     false,
                     labelString: 'Fecha'
-                }
+                },
+                distribution: 'linear'
             }],
             yAxes: [{
                 scaleLabel: {
@@ -28,6 +35,9 @@ var myChart = new Chart(ctx, {
                     beginAtZero: true
                 }
             }]
+        },
+        ticks:{
+            source: 'data'
         }
     }
 });

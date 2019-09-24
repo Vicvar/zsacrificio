@@ -9,7 +9,9 @@ window.result_tables ={
 window.setTables =  function(data){
 	for(source in data){
 		if(result_tables[source]!=null)
-			result_tables[source].destroy(); 
+			result_tables[source].destroy();
+		if(data[source]==null)
+			continue;
 		var r_table = document.getElementById(source + "-table");
 		//r_table.innerHTML= "";
 
