@@ -1,4 +1,6 @@
 <?php
+require_once "../vendor/autoload.php";
+
 interface Target{
 	public function __construct();
 	public function closeConnection();
@@ -333,5 +335,28 @@ class CoesAdapter implements Target{
 
 		return json_decode(pg_fetch_row($result)[0]);
 	}
+}
+
+class LobbyAdapter implements Target{
+	private $mdbcon;
+	private $psql_con;
+
+	function __construct(){
+		$this->mdbcon = (new MongoDB\Client)->selectDatabase('datos_lobby');
+		$this->psql_con = pg_connect("host=localhost dbname=zonas_sacrificio user=postgres password=contraseña") or die ("SEIA Adapter Connecion error");
+	}
+
+	function closeConnection(){
+		return pg_close($this->psql_con);
+	}
+
+	public function query($comunas, $timeSpan, $extraKWValues){
+
+	}
+
+	public function idQuery($id){
+		
+	}
+
 }
 ?>

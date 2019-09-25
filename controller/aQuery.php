@@ -23,7 +23,7 @@
 				$db = new CoesAdapter();
 				break;
 			default:
-				trigger_error("Unknown source for aQuery");
+				trigger_error("Unknown source for aQuery: ".$source);
 				break;
 		}
 		$result = $db->query($comunas, $timeSpan, $extraKW);

@@ -243,10 +243,16 @@ function search(){
 				var bts = document.getElementById('back-to-sel');
 				var search_but = document.getElementById('search-button');
 				var gran_temp = document.getElementById('date-gran-cont');
+				var ini = document.getElementById('f-inicio');
+				var fin = document.getElementById('f-fin');
+
 				res_tab.disabled = false;
 				bts.hidden = false;
 				search_but.hidden = true;
 				gran_temp.hidden = false;
+				ini.disabled = true;
+				fin.disabled = true;
+
 				tabHandler(res_tab,'result-tabs');
 				//Hide time range and show date table
 				document.getElementById('date-range').hidden = true;

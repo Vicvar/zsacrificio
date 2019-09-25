@@ -412,11 +412,15 @@ function resetSelector(){
 		var bts = document.getElementById('back-to-sel');
 		var search_but = document.getElementById('search-button');
 		var gran_temp = document.getElementById('date-gran-cont');
+		var ini = document.getElementById('f-inicio');
+		var fin = document.getElementById('f-fin');
 
 		res_tab.disabled = true;
 		bts.hidden = true;
 		search_but.hidden = false;
 		gran_temp.hidden = true;
+		ini.disabled = false;
+		fin.disabled = false;
 		tabHandler(stb,'search-tabs');
 
 		document.getElementById('date-range').hidden = false;

@@ -171,7 +171,7 @@
 						<div id="lobby" class="tab-content">
 							<h4>Datos Ley de lobby</h4>
 							<br>
-							<label><input class="source-cb" type="checkbox" > Usar fuente </label>
+							<label><input class="source-cb" type="checkbox" value="lobby"> Usar fuente </label>
 							<br><br>
 							<hr>
 						</div>
