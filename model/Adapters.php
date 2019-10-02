@@ -81,7 +81,7 @@ class SeiaAdapter implements Target{
 
 		$result = pg_query($this->psql_con, $pgqs);
 		
-		return pg_fetch_all($result)[0]['json_agg'];
+		return json_decode(pg_fetch_all($result)[0]['json_agg']);
 	}
 
 	private function processExtraValues($extraKWValues){
@@ -141,7 +141,7 @@ class CoesAdapter implements Target{
 	private $psql_con;
 
 	function __construct(){
-		$this->psql_con = pg_connect("host=localhost dbname=zonas_sacrificio user=postgres password=contraseña") or die ("SEIA Adapter Connecion error");
+		$this->psql_con = pg_connect("host=localhost dbname=zonas_sacrificio user=postgres password=contraseña") or die ("COES Adapter Connecion error");
 	}
 
 	function closeConnection(){
@@ -215,7 +215,7 @@ class CoesAdapter implements Target{
 
 		$result = pg_query($this->psql_con, $pgqs);
 
-		return pg_fetch_all($result)[0]['json_agg'];
+		return json_decode(pg_fetch_all($result)[0]['json_agg']);
 	}
 
 	private function getComunasFilter($cAlias,$comunas){
@@ -338,12 +338,12 @@ class CoesAdapter implements Target{
 }
 
 class LobbyAdapter implements Target{
-	private $mdbcon;
+	private $mdb_audiencias;
 	private $psql_con;
 
 	function __construct(){
-		$this->mdbcon = (new MongoDB\Client)->selectDatabase('datos_lobby');
-		$this->psql_con = pg_connect("host=localhost dbname=zonas_sacrificio user=postgres password=contraseña") or die ("SEIA Adapter Connecion error");
+		$this->mdb_audiencias = (new MongoDB\Client)->datos_lobby->audiencias;
+		$this->psql_con = pg_connect("host=localhost dbname=zonas_sacrificio user=postgres password=contraseña") or die ("LOBBY Adapter Connecion error");
 	}
 
 	function closeConnection(){
@@ -351,12 +351,94 @@ class LobbyAdapter implements Target{
 	}
 
 	public function query($comunas, $timeSpan, $extraKWValues){
+		//time span to mongo ISODates
+		$sDate = new MongoDB\BSON\UTCDateTime(strtotime($timeSpan[0])*1000);
+		$eDate = new MongoDB\BSON\UTCDateTime(strtotime($timeSpan[1])*1000);
 
+		//get comuna names from postgres public schema
+		$comunas_ids = array();
+		$comunas_regex = "";
+		$com_qs = "SELECT c.id, c.nombre FROM public.comunas as c WHERE c.valid_until is NULL";
+		$comunas_selected = count($comunas)>0;
+
+		if($comunas_selected){
+			//if there are selected comunas
+			$com_qs.=" and c.id IN (".array_shift($comunas);
+			foreach ($comunas as $c_id) {
+				$com_qs.=", ".$c_id;
+			}
+			$com_qs.=");";
+		}
+		else
+			$com_qs.=";";
+
+		$comuna_ns = pg_fetch_all(pg_query($this->psql_con,$com_qs));
+
+		//print_r($comuna_ns);
+
+		//search for audiencias in each comuna
+		foreach($comuna_ns as $cns){
+			//fixing name incompatibilities
+			//echo $cns['nombre'];
+			$c_nombre = $cns['nombre'];
+			if($c_nombre == 'SANTIAGO')
+				$c_nombre = 'SANTIAGO CENTRO';
+			else if($c_nombre == "O'HIGGINS")
+				$c_nombre = 'O’Higgins';
+			else if($c_nombre == "COYHAIQUE")
+				$c_nombre = 'COIHAIQUE';
+
+			$comuna_ids[$c_nombre]=$cns['id'];
+
+			$comunas_regex.="^".$c_nombre."$|";
+		}
+
+		$comunas_regex=substr($comunas_regex, 0, -1);
+
+		$q_arr = [
+				'comuna'=>['$regex'=>$comunas_regex,'$options'=>'i'],
+				'$or'=>[[
+					'fecha_inicio'=>['$gt'=>$sDate,'$lt'=>$eDate],
+					'fecha_termino'=>['$gt'=>$sDate,'$lt'=>$eDate]
+				]]
+			];
+
+		if(!$comunas_selected)
+			unset($q_arr['comuna']);
+		
+		print_r($q_arr);
+		echo json_encode($q_arr);
+
+		$cursor = $this->mdb_audiencias->find(
+			$q_arr,
+			[
+				'nombres'=>1,
+				'apellidos'=>1,
+				'cargo'=>1,
+				'referencia'=>1,
+				'fecha_inicio'=>1,
+				'fecha_termino'=>1
+			]
+		);
+
+		$i = 0;
+		foreach($cursor as $c){
+			$i+=1;
+			echo $c['referencia']."<br>";
+		}
+		echo $i;
+
+		echo "Nope";
 	}
 
 	public function idQuery($id){
 		
 	}
-
+/*
+db.audiencias.find({fecha_inicio:{$exists:true,$ne:null}}).forEach(function(e,i){
+e.fecha_inicio = new Date(e.fecha_inicio.replace(" ","T")+'Z');
+db.audiencias.save(e);
+})
+*/
 }
 ?>

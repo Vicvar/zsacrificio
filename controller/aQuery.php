@@ -22,6 +22,9 @@
 			case 'coes':
 				$db = new CoesAdapter();
 				break;
+			case 'lobby':
+				$db = new LobbyAdapter();
+				break;
 			default:
 				trigger_error("Unknown source for aQuery: ".$source);
 				break;
@@ -35,7 +38,7 @@
 
 	foreach($sources as $source){
 		$result = querySource($source, $comunas, $timeSpan, $extraKW[$source]);
-		$results[$source] = json_decode($result);
+		$results[$source] = $result;
 	}
 
 	//print_r($results);

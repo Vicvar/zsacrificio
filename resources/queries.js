@@ -13,7 +13,7 @@ noUiSlider.create(dSlider,{
 		max: timestamp('2019')
 	},
 	step: 24 * 60 * 60 * 1000,
-	start:[timestamp('2010'),timestamp('2012')],
+	start:[timestamp('2010'),timestamp('2015')],
 	connect: true,
 	format: wNumb({
 		decimals:0
