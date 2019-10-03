@@ -478,6 +478,7 @@ function displayDetails(details, source){
 	d_table.innerHTML += "<tbody></tbody>";
 	var d_table_body = d_table.firstElementChild;
 	for(var data in details[0]){
+		//this can be fixed for better display of mutivalued fields (add spaces)
 		d_table_body.innerHTML += "<tr><td>"+usToFLUC(data.toString())+"</td><td>"+(details[0][data]?details[0][data].toString():"-")+"</td></tr>";
 	}
 	//show details div

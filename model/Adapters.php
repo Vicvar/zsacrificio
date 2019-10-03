@@ -351,10 +351,12 @@ class LobbyAdapter implements Target{
 	}
 
 	public function query($comunas, $timeSpan, $extraKWValues){
+		//TIME
 		//time span to mongo ISODates
 		$sDate = new MongoDB\BSON\UTCDateTime(strtotime($timeSpan[0])*1000);
 		$eDate = new MongoDB\BSON\UTCDateTime(strtotime($timeSpan[1])*1000);
 
+		//SPACE
 		//get comuna names from postgres public schema
 		$comunas_ids = array();
 		$comunas_regex = "";
@@ -374,9 +376,6 @@ class LobbyAdapter implements Target{
 
 		$comuna_ns = pg_fetch_all(pg_query($this->psql_con,$com_qs));
 
-		//print_r($comuna_ns);
-
-		//search for audiencias in each comuna
 		foreach($comuna_ns as $cns){
 			//fixing name incompatibilities
 			//echo $cns['nombre'];
@@ -395,6 +394,19 @@ class LobbyAdapter implements Target{
 
 		$comunas_regex=substr($comunas_regex, 0, -1);
 
+		//EXTRA FILTERS
+
+		$nombres = $extraKWValues['nombres'];
+		$apellidos = $extraKWValues['appelidos'];
+		$cargo = $extraKWValues['cargo'];
+		$referencia = $extraKWValues['referencia'];
+		$nombres_asistente = $extraKWValues['nombres-a'];
+		$apellidos_asistente = $extraKWValues['appelidos-a'];
+		$forma = $extraKWValues['forma'];
+		$materias = $extraKWValues['materias'];
+
+
+
 		$q_arr = [
 				'comuna'=>['$regex'=>$comunas_regex,'$options'=>'i'],
 				'$or'=>[[
@@ -403,11 +415,39 @@ class LobbyAdapter implements Target{
 				]]
 			];
 
+		if($nombres != ""){
+			$ns = explode(" ", $nombres);
+			$q_arr['nombres'] = ['regex'=>""];
+			foreach($ns as $n){
+				$q_arr['nombres']['regex'].=$n."|";
+			}
+			$q_arr['nombres']['regex'] = substr($q_arr['nombres']['regex'],0,-1);
+		}
+
+		if($apellidos != ""){
+			$as = explode(" ", $apellidos);
+			$q_arr['apellidos'] = ['regex'=>""];
+			foreach($as as $a){
+				$q_arr['apellidos']['regex'].=$n."|";
+			}
+			$q_arr['apellidos']['regex'] = substr($q_arr['apellidos']['regex'],0,-1);
+		}
+
+		if($cargo != ""){
+			$q_arr['cargo']=['regex'=>$cargo];
+		}
+
+		if($referencia!=""){
+			$q_arr['referencia']=['regex'=>$referencia];
+		}
+
+
+
 		if(!$comunas_selected)
 			unset($q_arr['comuna']);
 		
-		print_r($q_arr);
-		echo json_encode($q_arr);
+		//print_r($q_arr);
+		//echo json_encode($q_arr);
 
 		$cursor = $this->mdb_audiencias->find(
 			$q_arr,
@@ -421,14 +461,13 @@ class LobbyAdapter implements Target{
 			]
 		);
 
-		$i = 0;
-		foreach($cursor as $c){
-			$i+=1;
-			echo $c['referencia']."<br>";
-		}
-		echo $i;
+		$result = array();
 
-		echo "Nope";
+		foreach($cursor as $c){
+			array_push($result, $c);
+		}
+
+		//echo "Nope";
 	}
 
 	public function idQuery($id){

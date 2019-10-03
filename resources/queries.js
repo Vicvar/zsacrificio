@@ -147,7 +147,7 @@ var clearResults = function(){
 //testing AJAX
 
 
-var fuentes = ['seia','coes'];
+var fuentes = ['seia','coes','lobby'];
 
 function validateForms(){
 	//to do
@@ -266,7 +266,7 @@ function search(){
 			//console.log('Empty responseText');
 		}
 	};
-	//console.log(rurl);
+	console.log(rurl);
 	phttp.open("GET",rurl,true);
 	phttp.send();
 }

@@ -57,8 +57,8 @@
 							<br>
 							
 							<label><input class="source-cb" type="checkbox" value="seia"> Usar fuente </label>
-							<br><br>
 							<hr>
+							<br>
 							<div class="form-field">
 								Nombre del Proyecto:
 								<input class="text-input" type="text" name="nombre">
@@ -102,6 +102,7 @@
 							<h4>Observatorio de conflictos sociales</h4>
 							<br>
 							<label><input class="source-cb" type="checkbox" value="coes"> Usar fuente </label>
+							<hr>
 							<br><br>
 
 							<div id="campos-conflictividad" class="multi-select">
@@ -172,8 +173,49 @@
 							<h4>Datos Ley de lobby</h4>
 							<br>
 							<label><input class="source-cb" type="checkbox" value="lobby"> Usar fuente </label>
-							<br><br>
 							<hr>
+							<br><br>
+							<div class="form-field">
+								Nombre(s) sujeto pasivo:
+								<input class="text-input" type="text" name="nombres">
+							</div>
+							<div class="form-field">
+								Apellido(s) sujeto pasivo:
+								<input class="text-input" type="text" name="apellidos">
+							</div>
+							<div class="form-field">
+								Cargo sujeto pasivo:
+								<input class="text-input" type="text" name="cargo">
+							</div>
+							<div class="form-field">
+								Referencia:
+								<input class="text-input" type="text" name="referencia">
+							</div>
+							<div id="materias" class="multi-select">
+								<label class="typo__label">Materias:</label>
+								<multiselect v-model="value" :options="options" :multiple="true" track-by="value" label="label" placeholder="Buscar en el selector" closeOnSelect="false"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+								<div class="clearbutton">
+									<button onclick="materias_audiencia.resetValues()">Borrar Filtro</button>
+								</div>
+							</div>
+
+							<div id="forma-audiencias" class="multi-select">
+								<label class="typo__label">Forma:</label>
+								<multiselect v-model="value" :options="options" :multiple="false" track-by="value" label="label" placeholder="Presencial/Virtual" closeOnSelect="true"><span slot="noResult">No hay elementos que concuerden con la búsqueda</span></multiselect>
+								<div class="clearbutton">
+									<button onclick="forma_audiencias.resetValues()">Borrar Filtro</button>
+								</div>
+							</div>
+
+							<div class="form-field">
+								Nombre asistente:
+								<input class="text-input" type="text" name="nombres-a">
+							</div>
+							<div class="form-field">
+								Apellido asistente:
+								<input class="text-input" type="text" name="apellidos-a">
+							</div>
+
 						</div>
 					</div>
 				</div>
@@ -301,6 +343,9 @@
 			var tacticas_protesta = <?php echo json_encode($tactica_protesta) ?>;
 
 			var medios = <?php echo json_encode($medio) ?>;
+
+			//lobby query data
+			var materias = <?php echo json_encode($materias)?>
 
 			//making sure results is disabled
 			document.getElementById('results-tab-button').disabled=true;

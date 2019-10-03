@@ -18,9 +18,15 @@ function createVueMultiselect(element, options){
 		methods:{
 			getValues(){
 				values = [];
-				for(v of this.value)
-					values.push(v.value);
-				return values;
+				//checking if iterable
+				if(typeof this.value[Symbol.iterator] === 'function'){
+					for(v of this.value)
+						values.push(v.value);
+					return values;
+				}
+				else{
+					return this.value.value;
+				}
 			},
 			resetValues(){
 				this.value = [];
@@ -246,3 +252,30 @@ for(sp of sector_productivo){
 }
 
 var sector_productivo = createVueMultiselect('#sector-productivo',sp_op);
+
+//Lobby
+
+var mat_op = [];
+
+for(mat of materias){
+	var op ={
+		value: mat,
+		label:mat
+	}
+	mat_op.push(op);
+}
+
+var materias_audiencia = createVueMultiselect('#materias',mat_op);
+
+var fa_op = [
+	{
+		value: "P",
+		label: "Presencial"
+	},
+	{
+		value: "V",
+		label: "Virtual"
+	}
+];
+
+var forma_audiencias = createVueMultiselect('#forma-audiencias',fa_op);

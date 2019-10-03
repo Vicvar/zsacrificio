@@ -245,16 +245,10 @@
 	padding-bottom: 5px;
 }
 
-.form-field2{
-	display: block;
-	width: 100%;
-	padding-top: 5px;
-	padding-bottom: 5px;
-}
-
 .text-input{
 	float: right;
 	padding-right: 10px;
+	width:auto;
 }
 
 .s-checkboxes{
