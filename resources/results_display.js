@@ -56,12 +56,14 @@ var ctx = document.getElementById('myChart');
 var timechart_objects = {};
 var colors = {
 	seia: 'rgba(54, 162, 235,',
-	coes: 'rgba(255, 99, 132,'
+	coes: 'rgba(255, 99, 132,',
+	lobby: 'rgba(255, 187, 0,'
 }
 
 var labels = {
 	seia: 'Proyectos',
-	coes: 'Protestas'
+	coes: 'Protestas',
+	lobby: 'Audiencias'
 }
 
 //system state variables
@@ -467,6 +469,27 @@ function setSource(source){
 	}
 }
 
+function dataContToString(data){
+	var rstr = "";
+	
+	if(typeof data == 'object'){
+		var first = true;
+		for(d of data){
+			if(first){
+				rstr += d.toString();
+				first = false;
+			}
+			else
+				rstr += ", " + d.toString();
+		}
+	}
+	else{
+		rstr = data.toString();
+	}
+
+	return rstr;
+}
+
 //Handler for detail displaying from the results table
 function displayDetails(details, source){
 	//console.log(details,source);
@@ -478,8 +501,9 @@ function displayDetails(details, source){
 	d_table.innerHTML += "<tbody></tbody>";
 	var d_table_body = d_table.firstElementChild;
 	for(var data in details[0]){
-		//this can be fixed for better display of mutivalued fields (add spaces)
-		d_table_body.innerHTML += "<tr><td>"+usToFLUC(data.toString())+"</td><td>"+(details[0][data]?details[0][data].toString():"-")+"</td></tr>";
+		//this can be fixed to better display mutivalued fields (add spaces)(?)
+		console.log(details[0][data]);
+		d_table_body.innerHTML += "<tr><td>"+usToFLUC(data.toString())+"</td><td>"+(details[0][data] ? dataContToString(details[0][data]):"-")+"</td></tr>";
 	}
 	//show details div
 	var details = document.getElementById(source+"-details-div");

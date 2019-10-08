@@ -358,7 +358,7 @@ class LobbyAdapter implements Target{
 
 		//SPACE
 		//get comuna names from postgres public schema
-		$comunas_ids = array();
+		$comuna_ids = array();
 		$comunas_regex = "";
 		$com_qs = "SELECT c.id, c.nombre FROM public.comunas as c WHERE c.valid_until is NULL";
 		$comunas_selected = count($comunas)>0;
@@ -383,7 +383,7 @@ class LobbyAdapter implements Target{
 			if($c_nombre == 'SANTIAGO')
 				$c_nombre = 'SANTIAGO CENTRO';
 			else if($c_nombre == "O'HIGGINS")
-				$c_nombre = 'O’Higgins';
+				$c_nombre = 'O’HIGGINS';
 			else if($c_nombre == "COYHAIQUE")
 				$c_nombre = 'COIHAIQUE';
 
@@ -402,7 +402,7 @@ class LobbyAdapter implements Target{
 		$referencia = $extraKWValues['referencia'];
 		$nombres_asistente = $extraKWValues['nombres-a'];
 		$apellidos_asistente = $extraKWValues['appelidos-a'];
-		$forma = $extraKWValues['forma'];
+		$forma = $extraKWValues['forma-audiencias'];
 		$materias = $extraKWValues['materias'];
 
 
@@ -417,61 +417,121 @@ class LobbyAdapter implements Target{
 
 		if($nombres != ""){
 			$ns = explode(" ", $nombres);
-			$q_arr['nombres'] = ['regex'=>""];
+			$q_arr['nombres'] = ['$regex'=>""];
 			foreach($ns as $n){
-				$q_arr['nombres']['regex'].=$n."|";
+				$q_arr['nombres']['$regex'].=$n."|";
 			}
-			$q_arr['nombres']['regex'] = substr($q_arr['nombres']['regex'],0,-1);
+			$q_arr['nombres']['$regex'] = substr($q_arr['nombres']['$regex'],0,-1);
 		}
 
 		if($apellidos != ""){
 			$as = explode(" ", $apellidos);
-			$q_arr['apellidos'] = ['regex'=>""];
+			$q_arr['apellidos'] = ['$regex'=>""];
 			foreach($as as $a){
-				$q_arr['apellidos']['regex'].=$n."|";
+				$q_arr['apellidos']['$regex'].=$n."|";
 			}
-			$q_arr['apellidos']['regex'] = substr($q_arr['apellidos']['regex'],0,-1);
+			$q_arr['apellidos']['$regex'] = substr($q_arr['apellidos']['$regex'],0,-1);
 		}
 
-		if($cargo != ""){
-			$q_arr['cargo']=['regex'=>$cargo];
+		if($cargo != "")
+			$q_arr['cargo']=['$regex'=>$cargo];
+		
+
+		if($referencia!="")
+			$q_arr['referencia']=['$regex'=>$referencia];
+		
+
+		if(!empty($forma))
+			$q_arr['forma']=$forma;
+
+		//Audiencias that contain asistentes with nombres and apellidos that match the filters
+		if($nombres_asistente!=""||$apellidos_asistente!=""){
+			$q_arr['asistentes']=['$elemMatch'=>['nombres'=>['$regex'=>$nombres_asistente,'$options'=>'i'],['apellidos'=>['$regex'=>$apellidos_asistente,'$options'=>'i']]]];
 		}
 
-		if($referencia!=""){
-			$q_arr['referencia']=['regex'=>$referencia];
+		if(!empty($materias)){
+			/*//if something else used and
+			if(!array_key_exists('$and', $q_arr))
+			*/
+			$q_arr['$and']=array();
+			foreach($materias as $m){
+				$match = ['materias'=>['$elemMatch'=>['nombre'=>$m]]];
+				array_push($q_arr['$and'],$match);
+			}
 		}
-
-
 
 		if(!$comunas_selected)
 			unset($q_arr['comuna']);
 		
 		//print_r($q_arr);
-		//echo json_encode($q_arr);
 
-		$cursor = $this->mdb_audiencias->find(
-			$q_arr,
-			[
-				'nombres'=>1,
-				'apellidos'=>1,
-				'cargo'=>1,
-				'referencia'=>1,
-				'fecha_inicio'=>1,
-				'fecha_termino'=>1
-			]
-		);
+		$projection = ['$project'=>[
+				'_id'=>FALSE,
+				'id'=>'$id_audiencia',
+				'name'=>['$concat'=>['$nombres',' ','$apellidos',', ','$cargo',' ','$referencia']],
+				'time_span'=>['start'=>['$dateToString'=>['date'=>'$fecha_inicio']],'end'=>['$dateToString'=>['date'=>'$fecha_termino']]],
+				'comunas'=>'$comuna'
+			]];
+
+		$cursor = $this->mdb_audiencias->aggregate([['$match'=>$q_arr],$projection]);
+
+		//echo json_encode($q_arr),json_encode($projection);
+
+		$result = array();
+
+
+		foreach($cursor as $c){
+			//from comuna names to ids and push into results array
+			if($c['comunas']!=""){
+				$com_id = $comuna_ids[mb_strtoupper($c['comunas'],'utf-8')];
+				/*if($com_id!=null)
+					echo "OK: ".$com_id." ";
+				else
+					echo "NULL: ".strtoupper($c['comunas']);
+				*/
+			}
+			$c['comunas'] = [$com_id];
+			array_push($result, $c);
+		}
+
+		//echo json_encode($result);
+
+		return $result;
+	}
+
+	public function idQuery($id){
+		$match = ['$match'=>['id_audiencia'=>$id]];
+		$project = ['$project'=>[
+			'_id'=>0,
+			'id_audiencia'=>1,
+			'id_cargo_pasivo'=>1,
+			'id_institucion'=>1,
+			'nombres'=>1,
+			'apellidos'=>1,
+			'cargo'=>1,
+			'referencia'=>1,
+			'forma'=>1, //add condition to change to Presencial or Virtual accordingly
+			'lugar'=>1,
+			'comuna'=>1,
+			'url_sujeto_pasivo'=>'$sujeto_pasivo_url',
+			'url_institución'=>'$institucion_url',
+			'fecha_inicio'=>['$substr'=>[['$dateToString'=>['date'=>'$fecha_inicio']],0,16]],
+			'fecha_término'=>['$substr'=>[['$dateToString'=>['date'=>'$fecha_termino']],0,16]],
+			'asistentes'=>['$map'=>['input'=>'$asistentes','as'=>'a','in'=>['$concat'=>['$$a.nombres',' ','$$a.apellidos',' (','$$a.cargo_activo_url',') representando a ','$$a.representa.nombre',' (','$$a.representa.pais',')']]]],
+			'materias'=>'$materias.nombre'
+
+		]];
+		$cursor = $this->mdb_audiencias->aggregate([$match,$project]);
 
 		$result = array();
 
 		foreach($cursor as $c){
-			array_push($result, $c);
+			array_push($result,$c);
 		}
 
-		//echo "Nope";
-	}
+		//echo json_encode($result);
 
-	public function idQuery($id){
-		
+		return $result;
 	}
 /*
 db.audiencias.find({fecha_inicio:{$exists:true,$ne:null}}).forEach(function(e,i){

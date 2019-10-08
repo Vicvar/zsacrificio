@@ -19,6 +19,8 @@ function createVueMultiselect(element, options){
 			getValues(){
 				values = [];
 				//checking if iterable
+				if(this.value==null)
+					return values;
 				if(typeof this.value[Symbol.iterator] === 'function'){
 					for(v of this.value)
 						values.push(v.value);

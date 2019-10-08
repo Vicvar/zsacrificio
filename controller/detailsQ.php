@@ -15,6 +15,9 @@
 		case 'coes':
 			$db = new CoesAdapter();
 			break;
+		case 'lobby':
+			$db = new LobbyAdapter();
+			break;
 		default:
 			trigger_error("Unknown source for detailsQ");
 			break;
